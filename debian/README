@@ -1,0 +1,7 @@
+The Debian Package kpa-grep
+----------------------------
+
+"native" packaging for convenient use straight out of github.
+dh_make -p kpa-grep_0.01 -i -c x11 --native
+
+ -- Mark Eichin <eichin@thok.org>  Mon, 08 Aug 2011 00:31:01 -0400
