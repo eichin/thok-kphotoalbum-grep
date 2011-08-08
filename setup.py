@@ -6,5 +6,5 @@ setup(name='kpa_grep',
       author='Mark Eichin',
       author_email='eichin@thok.org',
       url='http://thok.org/intranet/python/ztwit/README.html',
-      scripts='kpa-grep',
+      scripts=['kpa-grep'],
       )
