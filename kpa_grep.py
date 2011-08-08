@@ -10,6 +10,10 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
+__version__ = "0.01"
+__author__  = "Mark Eichin <eichin@thok.org>"
+__license__ = "MIT"
+
 import os
 import sys
 import optparse
