@@ -88,7 +88,6 @@ def main(argv):
     if options.xml:
         def emit_path(img):
             """write all the XML"""
-            # or etree.tostring?
             sys.stdout.write(etree.tostring(img))
             sys.stdout.flush()
 
