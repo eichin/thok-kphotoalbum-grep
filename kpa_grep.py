@@ -104,18 +104,16 @@ def main(argv):
                 else:
                     image[attr] = val
             for options in img:
-                assert options.tag == "options", options.tag # flatten this?
-                # options
-                image[options.tag] = {}
+                assert options.tag == "options", options.tag
                 for option in options:
                     assert option.tag == "option", option.tag
                     # option
-                    image[options.tag][option.get("name")] = []
+                    image[option.get("name")] = []
                     # values
                     for value in option:
                         for attr, val in value.items():
                             assert attr == "value", attr
-                            image[options.tag][option.get("name")].append(val)
+                            image[option.get("name")].append(val)
 
             print json.dumps(image)
             sys.stdout.flush()
