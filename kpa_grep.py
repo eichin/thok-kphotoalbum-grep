@@ -89,7 +89,7 @@ def main(argv):
         def emit_path(img):
             """write all the XML"""
             # or etree.tostring?
-            img.write(sys.stdout)
+            sys.stdout.write(etree.tostring(img))
             sys.stdout.flush()
 
     if options.json:
