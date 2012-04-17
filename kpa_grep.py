@@ -92,8 +92,35 @@ def main(argv):
             sys.stdout.flush()
 
     if options.json:
-        # TODO: try lxml.objectify
-        raise NotImplementedError("--json")
+        import json
+        def emit_path(img):
+            """similar to --xml, write out ad-hoc json"""
+            # lxml.objectify didn't really help, 
+            image = {}
+            for attr, val in sorted(img.items()):
+                if attr in ["width", "angle", "height"]:
+                    # because md5sum is *sometimes* int
+                    image[attr] = int(val)
+                else:
+                    image[attr] = val
+            for options in img:
+                assert options.tag == "options", options.tag # flatten this?
+                # options
+                image[options.tag] = {}
+                for option in options:
+                    assert option.tag == "option", option.tag
+                    # option
+                    image[options.tag][option.get("name")] = []
+                    # values
+                    for value in option:
+                        for attr, val in value.items():
+                            assert attr == "value", attr
+                            image[options.tag][option.get("name")].append(val)
+
+            print json.dumps(image)
+            sys.stdout.flush()
+
+        #raise NotImplementedError("--json")
 
     if not os.path.exists(options.index):
         raise IOError("Index %s not found" % options.index)
