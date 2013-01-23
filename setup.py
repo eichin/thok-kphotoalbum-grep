@@ -5,6 +5,6 @@ setup(name='kpa_grep',
       description='KPhotoAlbum Index Manipulation Tools',
       author='Mark Eichin',
       author_email='eichin@thok.org',
-      url='http://thok.org/intranet/python/ztwit/README.html',
+      url='https://github.com/eichin/thok-kphotoalbum-grep',
       scripts=['kpa-grep'],
       )
