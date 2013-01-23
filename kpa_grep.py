@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.01"
+__version__ = "0.02"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -63,6 +63,8 @@ def main(argv):
 
     parser.add_option("--tag", action="append", dest="tags", default=[],
                       help="must match this tag")
+    parser.add_option("--path", action="append", dest="paths", default=[],
+                      help='image "file" attribute must contain this string')
 
     since_base_time = None
     parser.add_option("--since", 
@@ -133,6 +135,13 @@ def main(argv):
             tags_required = set(options.tags)
             if tags_required - imgtags:
                 # rejected due to not satisfying the tags
+                continue
+        if options.paths:
+            for path in options.paths:
+                if path in img.get("file"):
+                    break
+            else:
+                # no matches, reject
                 continue
         if since_base_time:
             imgtime = dateutil.parser.parse(img.get("startDate"))
