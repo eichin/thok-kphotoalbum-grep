@@ -30,8 +30,17 @@ def kimdaba_default_album():
     """Find the path to the default album kimdaba will start with"""
     # could support cheap comments with an early .split("#",1)[0]
     # but the kde files don't use them
+    kphotoalbumrc = os.path.expanduser("~/.kde/share/config/kphotoalbumrc")
+
+    if not os.path.exists(kphotoalbumrc):
+        # We don't want to catch a broader exception, if it exists and we
+        # can't read it, that is something we want to diagnose, not handle.
+        # Since this just supplies the default argument, it'll be visible in
+        # the --help as absent, as well (once we upgrade to argparse, anyway)
+        return None
+
     args = dict(line.rstrip("\n").split("=", 1)
-                for line in file(os.path.expanduser("~/.kde/share/config/kphotoalbumrc"))
+                for line in file(kphotoalbumrc)
                 if "=" in line)
     return args["configfile"]
 
