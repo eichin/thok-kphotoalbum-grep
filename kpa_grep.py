@@ -55,6 +55,16 @@ def since(reltime):
         raise Exception("Didn't understand since %s" % reltime)
     return datetime.datetime(*value[:6])
 
+def past_since(reltime):
+    """If parsedatetime gives back a future time, try harder"""
+    when = since(reltime)
+    if when > datetime.datetime.today():
+        # "friday" can be in the future, so try "last friday"
+        # we only try once, and don't have any better ideas, so just hand
+        # back the result; even an exception is more useful than a future time
+        return since("last " + reltime)
+    return when
+
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
@@ -135,7 +145,7 @@ def main(argv):
         raise IOError("Index %s not found" % options.index)
 
     if options.since:
-        since_base_time = since(options.since)
+        since_base_time = past_since(options.since)
 
     kpa = etree.ElementTree(file=options.index)
     for img in kpa.findall("images/image"):
