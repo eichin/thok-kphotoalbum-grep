@@ -1,3 +1,10 @@
+kpa-grep (0.03) unstable; urgency=low
+
+  * Issue #2: handle a lack of kphotoalbumrc.
+  * Issue #1: if a fuzzy --since parse returns a future date, toss "last " on the front and try again.
+
+ -- Mark Eichin <eichin@thok.org>  Thu, 18 Apr 2013 01:21:01 -0400
+
 kpa-grep (0.02) unstable; urgency=low
 
   * Add --path (for Avocet project.)
