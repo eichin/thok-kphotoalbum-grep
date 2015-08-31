@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.03"
+__version__ = "0.04"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -49,8 +49,8 @@ def kimdaba_default_album():
 #  based on TERQAS/TimeML, just for completeness.
 def since(reltime):
     """return a lower timestamp for since-this-time"""
-    import parsedatetime.parsedatetime
-    value, success = parsedatetime.parsedatetime.Calendar().parse(reltime)
+    from parsedatetime import Calendar
+    value, success = Calendar().parse(reltime)
     if success == 0:
         raise Exception("Didn't understand since %s" % reltime)
     return datetime.datetime(*value[:6])
@@ -84,6 +84,10 @@ def main(argv):
                       help="must match this tag")
     parser.add_option("--path", action="append", dest="paths", default=[],
                       help='image "file" attribute must contain this string')
+
+    # TODO: switch to argparse and add an exclusion-group
+    parser.add_option("--dump-tags", action="store_true",
+                      help="dump all known tags")
 
     since_base_time = None
     parser.add_option("--since", 
@@ -148,6 +152,20 @@ def main(argv):
         since_base_time = past_since(options.since)
 
     kpa = etree.ElementTree(file=options.index)
+
+    if options.dump_tags:
+        if options.xml:
+            raise NotImplementedError("--dump-tags --xml")
+        if options.json:
+            raise NotImplementedError("--dump-tags --json")
+        # just use the cache - doesn't make it any faster, we still parse
+        #  the whole file, but it simplifies the code a little
+        for category in kpa.findall("Categories/Category"):
+            catname = category.get("name")
+            for catvalue in category.findall("value"):
+                print catname, catvalue.get("value").encode('utf-8')
+        sys.exit()
+
     for img in kpa.findall("images/image"):
         imgtags = set([f.get("value") for f in img.findall("options/option/value")])
         if options.tags:
