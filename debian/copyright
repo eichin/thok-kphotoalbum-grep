@@ -3,7 +3,7 @@ Upstream-Name: kpa-grep
 Source: <https://github.com/eichin/thok-kphotoalbum-grep>
 
 Files: *
-Copyright: 2011 Mark Eichin <eichin@thok.org>
+Copyright: 2011-2021 Mark Eichin <eichin@thok.org>
 License: X11
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the "Software"),
@@ -31,7 +31,7 @@ License: X11
  X Window System is a trademark of X Consortium, Inc.
 
 Files: debian/*
-Copyright: 2011 Mark Eichin <eichin@thok.org>
+Copyright: 2011-2021 Mark Eichin <eichin@thok.org>
 License: GPL-2.0+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
