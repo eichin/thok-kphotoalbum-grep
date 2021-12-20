@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """KPhotoAlbum Grep -- Simple CLI tool for pulling subsets of photos out of KPhotoAlbum, by
 scanning the index.xml directly.  Base example:
@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.04"
+__version__ = "0.05"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -40,7 +40,7 @@ def kimdaba_default_album():
         return None
 
     args = dict(line.rstrip("\n").split("=", 1)
-                for line in file(kphotoalbumrc)
+                for line in open(kphotoalbumrc)
                 if "=" in line)
     return args["configfile"]
 
@@ -140,7 +140,7 @@ def main(argv):
                             assert attr == "value", attr
                             image[option.get("name")].append(val)
 
-            print json.dumps(image)
+            print(json.dumps(image))
             sys.stdout.flush()
 
         #raise NotImplementedError("--json")
@@ -163,7 +163,7 @@ def main(argv):
         for category in kpa.findall("Categories/Category"):
             catname = category.get("name")
             for catvalue in category.findall("value"):
-                print catname, catvalue.get("value").encode('utf-8')
+                print(catname, catvalue.get("value").encode('utf-8'))
         sys.exit()
 
     for img in kpa.findall("images/image"):
