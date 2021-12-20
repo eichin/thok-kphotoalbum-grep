@@ -1,3 +1,9 @@
+kpa-grep (0.05) unstable; urgency=medium
+
+  * python3 port.
+
+ -- Mark W. Eichin <eichin@thok.org>  Mon, 20 Dec 2021 01:32:19 -0500
+
 kpa-grep (0.04) unstable; urgency=low
 
   * added --dump-tags to let me more easily find exact spellings of tags for other projects.
