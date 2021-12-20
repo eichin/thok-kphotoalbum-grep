@@ -7,7 +7,7 @@ Standards-Version: 3.9.1
 
 Package: kpa-grep
 Architecture: all
-Depends: ${misc:Depends}, python-dateutil, python-parsedatetime
+Depends: ${misc:Depends}, python3-dateutil, python3-parsedatetime
 Description: Simple CLI tool for pulling subsets of photos out of KPhotoAlbum
  kpa-grep scans the index.xml directly.  Base example:
  .
