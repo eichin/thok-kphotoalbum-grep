@@ -98,6 +98,12 @@ def main(argv):
 
     assert len(args) == 0
 
+    if not options.index:
+        sys.exit("No kphotoalbum index given (with --index or in kphotoalbumrc)")
+
+    if not os.path.exists(options.index):
+        sys.exit("kphotoalbum index {} not found".format(options.index))
+
     def emit_path(img):
         """given etree for <image>, just print the path"""
         path = img.get("file")
