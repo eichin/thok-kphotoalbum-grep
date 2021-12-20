@@ -22,7 +22,7 @@ import datetime
 import dateutil.parser
 
 # use cElementTree to get it off the ground - but a 40M index takes
-#  7 seconds to parse, and I'd kind of like something faster (or at 
+#  7 seconds to parse, and I'd kind of like something faster (or at
 #  least faster-to-first-result)
 
 # kimdaba_default_album lifted from thok kimdaba_album.py, by permission [from myself]
@@ -45,7 +45,7 @@ def kimdaba_default_album():
     return args["configfile"]
 
 # This is the easiest "fluffy" date parse I've found; parsedatetime was
-#  written for OSAF/Chandler.  Otherwise I'd have looked for something 
+#  written for OSAF/Chandler.  Otherwise I'd have looked for something
 #  based on TERQAS/TimeML, just for completeness.
 def since(reltime):
     """return a lower timestamp for since-this-time"""
@@ -90,7 +90,7 @@ def main(argv):
                       help="dump all known tags")
 
     since_base_time = None
-    parser.add_option("--since", 
+    parser.add_option("--since",
                       help="only look this far back (freeform)")
 
 
@@ -120,7 +120,7 @@ def main(argv):
         import json
         def emit_path(img):
             """similar to --xml, write out ad-hoc json"""
-            # lxml.objectify didn't really help, 
+            # lxml.objectify didn't really help,
             image = {}
             for attr, val in sorted(img.items()):
                 if attr in ["width", "angle", "height"]:
@@ -186,5 +186,3 @@ def main(argv):
                 # rejected due to being older than --since
                 continue
         emit_path(img)
-
-        
