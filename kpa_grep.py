@@ -169,7 +169,7 @@ def main(argv):
         for category in kpa.findall("Categories/Category"):
             catname = category.get("name")
             for catvalue in category.findall("value"):
-                print(catname, catvalue.get("value").encode('utf-8'))
+                print(catname, catvalue.get("value"))
         sys.exit()
 
     for img in kpa.findall("images/image"):
