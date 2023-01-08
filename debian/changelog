@@ -1,3 +1,9 @@
+kpa-grep (0.06) unstable; urgency=medium
+
+  * Issue #5: Fixed bad byte-output (over encoding) in --dump-tags.
+
+ -- Mark W. Eichin <eichin@thok.org>  Sat, 07 Jan 2023 22:29:23 -0500
+
 kpa-grep (0.05) unstable; urgency=medium
 
   * python3 port.
