@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.05"
+__version__ = "0.07"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -164,6 +164,26 @@ def main(argv):
             raise NotImplementedError("--dump-tags --xml")
         if options.json:
             raise NotImplementedError("--dump-tags --json")
+        if options.tags:
+            tags_required = set(options.tags)
+        if since_base_time:
+            # don't shortcut via categories, scrape tags from the images
+            collectedtags = set()
+            for img in kpa.findall("images/image"):
+                imgtime = dateutil.parser.parse(img.get("startDate"))
+                if imgtime < since_base_time:
+                    # rejected due to being older than --since
+                    continue
+                imgtags = set([f.get("value") for f in img.findall("options/option/value")])
+                if options.tags:
+                    if tags_required - imgtags:
+                        # rejected due to not satisfying the tags
+                        continue
+                collectedtags.update(imgtags)
+            for tag in sorted(collectedtags):
+                print(tag)
+            sys.exit()
+
         # just use the cache - doesn't make it any faster, we still parse
         #  the whole file, but it simplifies the code a little
         for category in kpa.findall("Categories/Category"):
@@ -192,3 +212,6 @@ def main(argv):
                 # rejected due to being older than --since
                 continue
         emit_path(img)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

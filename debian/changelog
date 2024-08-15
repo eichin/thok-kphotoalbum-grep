@@ -1,3 +1,10 @@
+kpa-grep (0.07) unstable; urgency=medium
+
+  * Allowed --dump-tags to filter on --since and --tag, for the "show me
+    the names of recent ice cream shop pictures" use case.
+
+ -- Mark W. Eichin <eichin@thok.org>  Wed, 14 Aug 2024 20:09:34 -0400
+
 kpa-grep (0.06) unstable; urgency=medium
 
   * Issue #5: Fixed bad byte-output (over encoding) in --dump-tags.
