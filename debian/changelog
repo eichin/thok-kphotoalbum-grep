@@ -1,3 +1,14 @@
+kpa-grep (0.09) unstable; urgency=medium
+
+  * Broaden --path to strip off the prefix of paths that the index is in.
+    This allows the output of kpa-grep (without --relative) to be used
+    directly with kpa-grep --path; specifically, if you're looping over
+    kpa-grep output to get explicit image file names to copy, you can then
+    pass them into kpa-grep --json or kpa-grep --markdown to get the
+    metadata without needing to handle the index path directly.
+
+ -- Mark W. Eichin <eichin@thok.org>  Fri, 23 Aug 2024 13:20:08 -0400
+
 kpa-grep (0.08) unstable; urgency=medium
 
   * Added --markdown (like --json and --xml.)  Entirely ad-hoc, just

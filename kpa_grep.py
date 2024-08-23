@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.08"
+__version__ = "0.09"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -87,7 +87,7 @@ def main(argv):
     parser.add_option("--exclude", action="append", dest="exclude_tags", default=[],
                       help="must *not* match this tag")
     parser.add_option("--path", action="append", dest="paths", default=[],
-                      help='image "file" attribute must contain this string')
+                      help='image "file" attribute must contain this string (index path is stripped if present)')
 
     # TODO: switch to argparse and add an exclusion-group
     parser.add_option("--dump-tags", action="store_true",
@@ -236,9 +236,13 @@ def main(argv):
                 # rejected due to having any excluded tags
                 continue
         if options.paths:
+            indexdir = os.path.dirname(options.index)
             for path in options.paths:
                 if path in img.get("file"):
                     break
+                if path.startswith(indexdir):
+                    if path.replace(indexdir, "").lstrip("/") in img.get("file"):
+                        break
             else:
                 # no matches, reject
                 continue
