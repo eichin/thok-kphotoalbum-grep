@@ -10,14 +10,14 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.09"
+__version__ = "0.10"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
 import os
 import sys
 import optparse
-import xml.etree.cElementTree as etree
+import xml.etree.ElementTree as etree
 import datetime
 import dateutil.parser
 
@@ -123,7 +123,7 @@ def main(argv):
     if options.xml:
         def emit_path(img):
             """write all the XML"""
-            sys.stdout.write(etree.tostring(img))
+            sys.stdout.write(etree.tostring(img, encoding="unicode"))
             sys.stdout.flush()
 
     if options.json:

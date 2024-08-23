@@ -1,3 +1,15 @@
+kpa-grep (0.10) unstable; urgency=medium
+
+  * Per
+    https://docs.python.org/3.12/library/xml.etree.elementtree.html#module-xml.etree.ElementTree,
+    cElementTree is deprecated since since version 3.3 (ElementTree itself
+    "will use a fast implementation whenever available" and quick testing
+    shows that the performance matches.)
+  * Set encoding to "unicode" to get a string instead of bytes for the
+    output. (closes github#9.)
+
+ -- Mark W. Eichin <eichin@thok.org>  Fri, 23 Aug 2024 13:55:17 -0400
+
 kpa-grep (0.09) unstable; urgency=medium
 
   * Broaden --path to strip off the prefix of paths that the index is in.
