@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.07"
+__version__ = "0.08"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -79,9 +79,13 @@ def main(argv):
                       help="output whole records as individual JSON objects")
     parser.add_option("--xml", action="store_true",
                       help="output whole records as KPhotoAlbum XML (no surrounding document)")
+    parser.add_option("--markdown", action="store_true",
+                      help="output whole records as ad-hoc Markdown")
 
     parser.add_option("--tag", action="append", dest="tags", default=[],
                       help="must match this tag")
+    parser.add_option("--exclude", action="append", dest="exclude_tags", default=[],
+                      help="must *not* match this tag")
     parser.add_option("--path", action="append", dest="paths", default=[],
                       help='image "file" attribute must contain this string')
 
@@ -149,7 +153,28 @@ def main(argv):
             print(json.dumps(image))
             sys.stdout.flush()
 
-        #raise NotImplementedError("--json")
+    if options.markdown:
+        def emit_path(img):
+            """similar to --xml, write out ad-hoc json"""
+            path = img.get("file")
+            basepath = path.split("/")[-1].split(".")[0]
+            print(f"## {basepath}")
+            print(f'![{basepath}]({path}){{: title="{basepath}"}}')
+            print(f'{img.get("description") or ""}')
+            for options in img:
+                assert options.tag == "options", options.tag
+                for option in options:
+                    assert option.tag == "option", option.tag
+                    print()
+                    print(f"### {option.get('name')}")
+                    tags = []
+                    for value in option:
+                        for attr, val in value.items():
+                            assert attr == "value", attr
+                            tags.append(val)
+                    print(", ".join(sorted(tags)))
+            print()
+        
 
     if not os.path.exists(options.index):
         raise IOError("Index %s not found" % options.index)
@@ -166,6 +191,8 @@ def main(argv):
             raise NotImplementedError("--dump-tags --json")
         if options.tags:
             tags_required = set(options.tags)
+        if options.exclude_tags:
+            tags_forbidden = set(options.exclude_tags)
         if since_base_time:
             # don't shortcut via categories, scrape tags from the images
             collectedtags = set()
@@ -178,6 +205,10 @@ def main(argv):
                 if options.tags:
                     if tags_required - imgtags:
                         # rejected due to not satisfying the tags
+                        continue
+                if options.exclude_tags:
+                    if tags_forbidden & imgtags:
+                        # rejected due to having any excluded tags
                         continue
                 collectedtags.update(imgtags)
             for tag in sorted(collectedtags):
@@ -198,6 +229,11 @@ def main(argv):
             tags_required = set(options.tags)
             if tags_required - imgtags:
                 # rejected due to not satisfying the tags
+                continue
+        if options.exclude_tags:
+            tags_forbidden = set(options.exclude_tags)
+            if tags_forbidden & imgtags:
+                # rejected due to having any excluded tags
                 continue
         if options.paths:
             for path in options.paths:

@@ -1,3 +1,13 @@
+kpa-grep (0.08) unstable; urgency=medium
+
+  * Added --markdown (like --json and --xml.)  Entirely ad-hoc, just
+    generates an inline image with some metadata, and adds all of the
+    option fields as addition subchapters.
+  * Added --exclude (just the opposite of --tag.)  Filters out images that
+    have any of the excluded tags; most likely used as "--exclude blurry".
+
+ -- Mark W. Eichin <eichin@thok.org>  Fri, 23 Aug 2024 12:34:38 -0400
+
 kpa-grep (0.07) unstable; urgency=medium
 
   * Allowed --dump-tags to filter on --since and --tag, for the "show me
