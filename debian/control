@@ -13,6 +13,8 @@ Build-Depends:
   jq,
 ## xmllint to validate --xml output
   libxml2-utils,
+## xq for more --xml testing (and examples)
+  xq,
 # duplicates of install-deps so we can run also tests at build time
   python3-dateutil,
   python3-parsedatetime,

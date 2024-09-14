@@ -81,6 +81,16 @@ that python uses underneath `etree`.)
 
     $ kpa-grep --index /tmp/kpa-idx.xml --tag test --xml | xmllint --noout -
 
+Try XML selection with `xq` and Xpath. (`xq` is in Go, so "even more
+independent", but this might also be useful for "shape" testing when
+we expand <https://github.com/eichin/thok-kphotoalbum-grep/issues/3>
+further.)
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --tag test --xml | xq -x '//options/option/@name'
+    Keywords
+    $ kpa-grep --index /tmp/kpa-idx.xml --tag test --xml | xq -x '//options/option/value/@value'
+    test
+
 Test that `--exclude` gives us the other filename.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --exclude test
@@ -101,14 +111,15 @@ match, this is testing the "strip off the common prefix" feature.)
 ## using kde config to find index
 
 Test that the value is used even if the file is gone (if `kphotoalbum`
-changes such that the value is stored elsewhere we want to fail hard,
-not guess.)
+changes such that the value is stored elsewhere we want to know about
+it.)
 
     $ mkdir -p ~/.kde/share/config
 
-If the config is present but we can't parse out a configfile entry, we
-currently blow up with a `KeyError: 'configfile'` traceback.  [Be
-friendlier](https://github.com/eichin/thok-kphotoalbum-grep/issues/11). 
+If the config is present but we can't parse out a configfile entry,
+warn the user (this test makes sure sure [Be
+friendlier](https://github.com/eichin/thok-kphotoalbum-grep/issues/11)
+stays fixed.)
 
     $ touch ~/.kde/share/config/kphotoalbumrc
     $ kpa-grep
@@ -116,10 +127,15 @@ friendlier](https://github.com/eichin/thok-kphotoalbum-grep/issues/11).
     No kphotoalbum index given (with --index or in kphotoalbumrc)
     [1]
 
+Make sure that we fail clearly when the file mentioned isn't actually
+there.
+
     $ echo configfile=/tmp/missing-index.xml > ~/.kde/share/config/kphotoalbumrc
     $ kpa-grep
     kphotoalbum index /tmp/missing-index.xml not found
     [1]
+
+Test that an actual config works.
 
     $ echo configfile=/tmp/kpa-idx.xml > ~/.kde/share/config/kphotoalbumrc
     $ kpa-grep
