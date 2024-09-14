@@ -9,5 +9,8 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+export PYBUILD_TEST_ARGS:=cram3 --indent=4 {dir}/cramtests/*.md
+export PYBUILD_TEST_CUSTOM:=1
+
 %:
 	dh $@ --buildsystem=pybuild --with=python3
