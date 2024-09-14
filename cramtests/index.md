@@ -108,6 +108,34 @@ match, this is testing the "strip off the common prefix" feature.)
     $ kpa-grep --index /tmp/kpa-idx.xml --path /tmp/test_img_1.jpg
     /tmp/test_img_1.jpg
 
+Get relative (to the XML file) paths instead of normalized ones.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --relative
+    test_img_1.jpg
+    test_img_2.jpg
+
+Test `--print0` explicitly.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --relative --print0 |cat --show-all
+    test_img_1.jpg^@test_img_2.jpg^@ (no-eol)
+
+Test `--print0` against `xargs -0`.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --relative --print0 |xargs -n1 -0 echo
+    test_img_1.jpg
+    test_img_2.jpg
+
+Basic test of Markdown output.  (Strip blank lines to make editing the
+test a little easier.)  This also tests that Keywords show up.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --markdown|grep .
+    ## test_img_1
+    ![test_img_1](test_img_1.jpg){: title="test_img_1"}
+    ### Keywords
+    test
+    ## test_img_2
+    ![test_img_2](test_img_2.jpg){: title="test_img_2"}
+
 ## using kde config to find index
 
 Test that the value is used even if the file is gone (if `kphotoalbum`
