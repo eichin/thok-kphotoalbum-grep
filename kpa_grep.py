@@ -21,10 +21,6 @@ import xml.etree.ElementTree as etree
 import datetime
 import dateutil.parser
 
-# use cElementTree to get it off the ground - but a 40M index takes
-#  7 seconds to parse, and I'd kind of like something faster (or at
-#  least faster-to-first-result)
-
 # kimdaba_default_album lifted from thok kimdaba_album.py, by permission [from myself]
 def kimdaba_default_album():
     """Find the path to the default album kimdaba will start with"""
