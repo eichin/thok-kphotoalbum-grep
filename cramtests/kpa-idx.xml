@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KPhotoAlbum version="10" compressed="0">
+   <Categories>
+     <Category name="Keywords">
+       <value value="test" id="1"/>
+     </Category>
+   </Categories>
+   <images>
+       <image file="test_img_1.jpg" label="" startDate="1980-01-01T00:00:10">
+           <options>
+               <option name="Keywords">
+                   <value value="test"/>
+               </option>
+           </options>
+       </image>
+       <image file="test_img_2.jpg" label="" startDate="1980-01-02T00:00:10">
+           <options/>
+       </image>
+   </images>
+</KPhotoAlbum>

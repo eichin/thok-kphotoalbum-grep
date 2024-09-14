@@ -8,19 +8,13 @@ that to `PATH`.
     $ SCRIPTSBUILTDIR=$(realpath ${TESTDIR}/../build/scripts-*)
     $ export PATH=${SCRIPTSBUILTDIR}:$PATH
 
+Put the XML files in `/tmp` to make the tests more readable.
+
+    $ cp ${TESTDIR}/kpa-*.xml /tmp/
+
 ## basic index
 
 ### Empty file, no tags.
-
-    $ cat > /tmp/kpa-empty-idx.xml <<'KPA'
-    > <?xml version="1.0" encoding="UTF-8"?>
-    > <KPhotoAlbum version="10" compressed="0">
-    >    <Categories>
-    >    </Categories>
-    >    <images>
-    >    </images>
-    > </KPhotoAlbum>
-    > KPA
 
 Confirm that it parses.
 
@@ -35,29 +29,6 @@ Confirm that a nonexistent tag doesn't break.
     $ kpa-grep --index /tmp/kpa-empty-idx.xml --tag fred
 
 ### Two images, one keyword applied to one of them.
-
-    $ cat > /tmp/kpa-idx.xml <<'KPA'
-    > <?xml version="1.0" encoding="UTF-8"?>
-    > <KPhotoAlbum version="10" compressed="0">
-    >    <Categories>
-    >      <Category name="Keywords">
-    >        <value value="test" id="1"/>
-    >      </Category>
-    >    </Categories>
-    >    <images>
-    >        <image file="test_img_1.jpg" label="" startDate="1980-01-01T00:00:10">
-    >            <options>
-    >                <option name="Keywords">
-    >                    <value value="test"/>
-    >                </option>
-    >            </options>
-    >        </image>
-    >        <image file="test_img_2.jpg" label="" startDate="1980-01-02T00:00:10">
-    >            <options/>
-    >        </image>
-    >    </images>
-    > </KPhotoAlbum>
-    > KPA
 
 No filters should give all of the files.
 
@@ -121,4 +92,3 @@ match, this is testing the "strip off the common prefix" feature.)
     $ kpa-grep --index /tmp/kpa-idx.xml --path /tmp/test_img_1.jpg
     /tmp/test_img_1.jpg
 
-TODO: switch these to files that are in the cramtests dir...
