@@ -105,7 +105,10 @@ currently blow up with a `KeyError: 'configfile'` traceback.  [Be
 friendlier](https://github.com/eichin/thok-kphotoalbum-grep/issues/11). 
 
     $ touch ~/.kde/share/config/kphotoalbumrc
-    $ : SKIP kpa-grep
+    $ kpa-grep
+    Warning: kphotoalbumrc found, but no configfile entry found
+    No kphotoalbum index given (with --index or in kphotoalbumrc)
+    [1]
 
     $ echo configfile=/tmp/missing-index.xml > ~/.kde/share/config/kphotoalbumrc
     $ kpa-grep

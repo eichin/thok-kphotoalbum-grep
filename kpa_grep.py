@@ -38,6 +38,12 @@ def kimdaba_default_album():
     args = dict(line.rstrip("\n").split("=", 1)
                 for line in open(kphotoalbumrc)
                 if "=" in line)
+    if "configfile" not in args:
+        # kphotoalbumrc changes format more than index.xml does, but we
+        #  should give some hints as to why we get
+        print("Warning: kphotoalbumrc found, but no configfile entry found",
+              file=sys.stderr)
+        return None
     return args["configfile"]
 
 # This is the easiest "fluffy" date parse I've found; parsedatetime was
