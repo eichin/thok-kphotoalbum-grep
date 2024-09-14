@@ -92,3 +92,31 @@ match, this is testing the "strip off the common prefix" feature.)
     $ kpa-grep --index /tmp/kpa-idx.xml --path /tmp/test_img_1.jpg
     /tmp/test_img_1.jpg
 
+## using kde config to find index
+
+Test that the value is used even if the file is gone (if `kphotoalbum`
+changes such that the value is stored elsewhere we want to fail hard,
+not guess.)
+
+    $ mkdir -p ~/.kde/share/config
+
+If the config is present but we can't parse out a configfile entry, we
+currently blow up with a `KeyError: 'configfile'` traceback.  [Be
+friendlier](https://github.com/eichin/thok-kphotoalbum-grep/issues/11). 
+
+    $ touch ~/.kde/share/config/kphotoalbumrc
+    $ : SKIP kpa-grep
+
+    $ echo configfile=/tmp/missing-index.xml > ~/.kde/share/config/kphotoalbumrc
+    $ kpa-grep
+    kphotoalbum index /tmp/missing-index.xml not found
+    [1]
+
+    $ echo configfile=/tmp/kpa-idx.xml > ~/.kde/share/config/kphotoalbumrc
+    $ kpa-grep
+    /tmp/test_img_1.jpg
+    /tmp/test_img_2.jpg
+
+Clean up to avoid messing with other tests.
+
+    $ rm ~/.kde/share/config/kphotoalbumrc
