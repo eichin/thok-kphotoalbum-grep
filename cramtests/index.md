@@ -75,6 +75,12 @@ making it more completely valid/useful.
            </image>
             (no-eol)
 
+Do a basic check of the XML output with an independent parser
+(`xmllint` uses the GNOME `libxml2`, rather than the `expat` library
+that python uses underneath `etree`.)
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --tag test --xml | xmllint --noout -
+
 Test that `--exclude` gives us the other filename.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --exclude test

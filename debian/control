@@ -7,8 +7,12 @@ Build-Depends:
   dh-python,
   python3,
 # test deps
+## the cram shell-in-markdown test harness itself
   python3-cram,
+## jq to validate --json output
   jq,
+## xmllint to validate --xml output
+  libxml2-utils,
 # duplicates of install-deps so we can run also tests at build time
   python3-dateutil,
   python3-parsedatetime,

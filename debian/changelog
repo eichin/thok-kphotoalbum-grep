@@ -2,6 +2,8 @@ kpa-grep (0.11) unstable; urgency=medium
 
   * Add basic cram tests (closes github#7.)
   * Handle kphotoalbumrc not having a configfile setting (closes github#11.)
+  * Use jq to validate --json output.
+  * Use xmllint to validate --xml output.
 
  -- Mark W. Eichin <eichin@thok.org>  Sat, 14 Sep 2024 17:16:15 -0400
 
