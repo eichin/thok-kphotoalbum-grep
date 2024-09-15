@@ -14,3 +14,6 @@ export PYBUILD_TEST_CUSTOM:=1
 
 %:
 	dh $@ --buildsystem=pybuild --with=python3
+
+execute_after_dh_auto_build:
+	ronn -r < kpa-grep.1.ronn.md > kpa-grep.1

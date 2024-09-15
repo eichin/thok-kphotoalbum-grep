@@ -1,3 +1,9 @@
+kpa-grep (0.12) unstable; urgency=medium
+
+  * Add man page (using ronn) (closes github#6.)
+
+ -- Mark W. Eichin <eichin@thok.org>  Sat, 14 Sep 2024 23:13:35 -0400
+
 kpa-grep (0.11) unstable; urgency=medium
 
   * Add basic cram tests (closes github#7.)

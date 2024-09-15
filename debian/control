@@ -6,6 +6,8 @@ Build-Depends:
   debhelper (>= 10),
   dh-python,
   python3,
+# ronn builds man pages from markdown
+  ronn,
 # test deps
 ## the cram shell-in-markdown test harness itself
   python3-cram,

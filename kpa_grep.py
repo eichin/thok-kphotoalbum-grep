@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.11"
+__version__ = "0.12"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
