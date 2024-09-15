@@ -32,7 +32,7 @@ kpa-grep (0.14) unstable; urgency=medium
       doesn't work, use more f-strings, improve post-argparse TODO, fix
       some whitespace.
 
-  -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
 
 kpa-grep (0.13) unstable; urgency=medium
 
