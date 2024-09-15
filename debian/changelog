@@ -23,6 +23,9 @@ kpa-grep (0.14) unstable; urgency=medium
     * debian/control: debhelper-compat raised from 10 to 13. Reviewed
       debhelper-compat-upgrade-checklist(7).  Eliminates
       package-uses-old-debhelper-compat-version.
+    * setup.py, debian/control: switch explicitly from distutils.core to
+      setuptools (the backwards compatibility interface was still
+      triggering uses-python-distutils.)
 
  -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
 
