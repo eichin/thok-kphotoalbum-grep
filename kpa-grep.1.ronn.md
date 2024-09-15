@@ -92,11 +92,15 @@ path:
     at which point feeding `--json` output to some Jinja2 code instead
     might make more sense.)
     
-Unrelated to the above, there's a single `--dump-tags` option that, by
-default, dumps out all known tags.  The output includes the category
-name.  You can also extract a subset of the names by combining it with
-`--tag`, `--exclude`, and `--since` (in this mode it *doesn't* print a
-category - see github#15.)
+Finally, there are a few options that don't fit in the groups above:
+
+  * `--dump-tags`:
+    Dump out all known tags, one per line.  The output includes the
+    category name.  You can also extract a subset of the names by
+    combining it with `--tag`, `--exclude`, and `--since` (in this
+    mode it *doesn't* print a category - see github#15.)
+
+
 
 ## EXAMPLES
 

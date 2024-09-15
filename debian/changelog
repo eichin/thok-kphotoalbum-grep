@@ -1,3 +1,10 @@
+kpa-grep (0.13) unstable; urgency=medium
+
+  * Add --print0 support to --dump-tags (closes github #16.)
+  * Add more tests for --dump-tags --since.
+
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 02:05:26 -0400
+
 kpa-grep (0.12) unstable; urgency=medium
 
   * Add man page (using ronn) (closes github#6.)

@@ -41,10 +41,27 @@ Dump tags should work.
     $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags
     Keywords test
 
+Dump tags supports `--print0`.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --print0 | cat --show-all
+    Keywords test^@ (no-eol)
+
+Dump tags supports `--since` and `--print0` together (turns out to be
+separate code paths.)  See also
+<https://github.com/eichin/thok-kphotoalbum-grep/issues/16>.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --print0 --since 1970-01-01 | cat --show-all
+    test^@ (no-eol)
+
 The files are explicitly ancient (1980) so "since last week" should
 not produce them.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --since "last week"
+
+But since the dawn of time *should*.
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --since 1970-01-01
+    test
 
 Known tag path gets printed.
 

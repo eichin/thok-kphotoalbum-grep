@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.12"
+__version__ = "0.13"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -214,7 +214,8 @@ def main(argv):
                         continue
                 collectedtags.update(imgtags)
             for tag in sorted(collectedtags):
-                print(tag)
+                print(tag, end='\0' if options.print0 else '\n')
+            sys.stdout.flush()
             sys.exit()
 
         # just use the cache - doesn't make it any faster, we still parse
@@ -222,7 +223,9 @@ def main(argv):
         for category in kpa.findall("Categories/Category"):
             catname = category.get("name")
             for catvalue in category.findall("value"):
-                print(catname, catvalue.get("value"))
+                print(catname, catvalue.get("value"), 
+                      end='\0' if options.print0 else '\n')
+            sys.stdout.flush()
         sys.exit()
 
     for img in kpa.findall("images/image"):
