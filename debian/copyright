@@ -1,4 +1,4 @@
-Format: http://dep.debian.net/deps/dep5
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: kpa-grep
 Source: <https://github.com/eichin/thok-kphotoalbum-grep>
 
@@ -27,7 +27,7 @@ License: X11
  not be used in advertising or otherwise to promote the sale, use or
  other dealings in this Software without prior written authorization
  from the X Consortium.
-
+ .
  X Window System is a trademark of X Consortium, Inc.
 
 Files: debian/*
@@ -48,6 +48,3 @@ License: GPL-2.0+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.

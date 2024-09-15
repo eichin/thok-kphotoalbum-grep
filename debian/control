@@ -1,9 +1,9 @@
 Source: kpa-grep
-Section: unknown
-Priority: extra
+Section: utils
+Priority: optional
 Maintainer: Mark Eichin <eichin@thok.org>
 Build-Depends:
-  debhelper (>= 10),
+  debhelper-compat (= 13),
   dh-python,
   python3,
 # ronn builds man pages from markdown
@@ -20,19 +20,21 @@ Build-Depends:
 # duplicates of install-deps so we can run also tests at build time
   python3-dateutil,
   python3-parsedatetime,
-Standards-Version: 3.9.1
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
 
 Package: kpa-grep
 Architecture: all
 Depends: ${misc:Depends},
+  ${python3:Depends},
   python3-dateutil,
   python3-parsedatetime,
 Description: Simple CLI tool for pulling subsets of photos out of KPhotoAlbum
  kpa-grep scans the index.xml directly.  Base example:
  .
-    kpa-grep --tag office --since "last month" | tar cf office-pics.tar --files-from=-
+    kpa-grep --tag office --since "last month" | \
+    tar cf office-pics.tar --files-from=-
  .
  finds the last month's files with the "office" keyword and puts them
  in a tar file; it uses the default kphotoalbum index file, and outputs
  full pathnames so tar can just find them.
-

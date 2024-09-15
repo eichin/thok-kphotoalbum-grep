@@ -1,9 +1,37 @@
+kpa-grep (0.14) unstable; urgency=medium
+
+  * Partial lintian fixes (started using debspawn build --lintian):
+    * debian/copyright: copyright-contains-dh_make-todo-boilerplate,
+      syntax-error-in-dep5-copyright, unversioned-copyright-format-uri
+      (copyright-format was formalized, from dep5 to 1.0)
+    * debian/control: package-installs-python-pycache-dir,
+      python-package-missing-depends-on-python,
+      python3-script-but-no-python3-dep, section-is-dh_make-template,
+      extended-description-line-too-long,
+      priority-extra-is-replaced-by-priority-optional,
+      python-module-in-wrong-location, out-of-date-standards-version,
+      silent-on-rules-requiring-root, trailing-whitespace.  Reviewed
+      /usr/share/doc/debian-policy/policy.txt.gz "Upgrading checklist"
+      from 3.9.1-4.6.2.  Added Rules-Requires-Root: no.  Switched to
+      debhelper-compat. ("dh" is doing most of the work for this upgrade.)
+      Changed priority to optional (per standards-version 4.0.1).  Chose
+      section "utils" (made more sense than "graphics" where kphotoalbum
+      itself is.)
+    * debian/changelog: trailing-whitespace
+    * kpa-grep.1.ronn.md: typo-in-manual-page
+    * debian/compat: removed
+    * debian/control: debhelper-compat raised from 10 to 13. Reviewed
+      debhelper-compat-upgrade-checklist(7).  Eliminates
+      package-uses-old-debhelper-compat-version.
+
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
+
 kpa-grep (0.13) unstable; urgency=medium
 
   * Add --print0 support to --dump-tags (closes github #16.)
   * Add more tests for --dump-tags --since.
   * Add --index-path (closes github #4.)
-  
+
  -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 02:05:26 -0400
 
 kpa-grep (0.12) unstable; urgency=medium

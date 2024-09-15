@@ -82,7 +82,7 @@ path:
   * `--markdown`:
     This (experimental) option generates an adhoc Markdown snippet
     with a level 2 header with the image basename, an inline image
-    experssion, and then level 3 headers with any categories of tags
+    expression, and then level 3 headers with any categories of tags
     or description that are present.  The idea was to have a tag
     filter produce the skeleton of a photoessay with all of the
     "tedious" image reference bits taken care of, and then let you
