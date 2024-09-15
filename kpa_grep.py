@@ -16,7 +16,7 @@ __license__ = "MIT"
 
 import os
 import sys
-import optparse
+import argparse
 import xml.etree.ElementTree as etree
 import datetime
 import dateutil.parser
@@ -70,41 +70,39 @@ def past_since(reltime):
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
-    parser = optparse.OptionParser(usage=__doc__, version=__version__)
-    parser.add_option("--print0", action="store_true",
-                      help="NUL instead of newline, for xargs -0")
-    parser.add_option("--relative", action="store_true",
-                      help="paths relative to the index file (ie. don't normalize them)")
-    parser.add_option("--index", metavar="PATH", default=kimdaba_default_album(),
-                      help="explicitly specify the index file PATH")
-    parser.add_option("--json", action="store_true",
-                      help="output whole records as individual JSON objects")
-    parser.add_option("--xml", action="store_true",
-                      help="output whole records as KPhotoAlbum XML (no surrounding document)")
-    parser.add_option("--markdown", action="store_true",
-                      help="output whole records as ad-hoc Markdown")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--print0", action="store_true",
+                        help="NUL instead of newline, for xargs -0")
+    parser.add_argument("--relative", action="store_true",
+                        help="paths relative to the index file (ie. don't normalize them)")
+    parser.add_argument("--index", metavar="PATH", default=kimdaba_default_album(),
+                        help="explicitly specify the index file PATH")
+    parser.add_argument("--json", action="store_true",
+                        help="output whole records as individual JSON objects")
+    parser.add_argument("--xml", action="store_true",
+                        help="output whole records as KPhotoAlbum XML (no surrounding document)")
+    parser.add_argument("--markdown", action="store_true",
+                        help="output whole records as ad-hoc Markdown")
 
-    parser.add_option("--tag", action="append", dest="tags", default=[],
-                      help="must match this tag")
-    parser.add_option("--exclude", action="append", dest="exclude_tags", default=[],
-                      help="must *not* match this tag")
-    parser.add_option("--path", action="append", dest="paths", default=[],
-                      help='image "file" attribute must contain this string (index path is stripped if present)')
+    parser.add_argument("--tag", action="append", dest="tags", default=[],
+                        help="must match this tag")
+    parser.add_argument("--exclude", action="append", dest="exclude_tags", default=[],
+                        help="must *not* match this tag")
+    parser.add_argument("--path", action="append", dest="paths", default=[],
+                        help='image "file" attribute must contain this string (index path is stripped if present)')
 
     # TODO: switch to argparse and add an exclusion-group
-    parser.add_option("--dump-tags", action="store_true",
-                      help="dump all known tags")
-    parser.add_option("--index-path", action="store_true",
-                      help="Display the index path we're using if it exists")
+    parser.add_argument("--dump-tags", action="store_true",
+                        help="dump all known tags")
+    parser.add_argument("--index-path", action="store_true",
+                        help="Display the index path we're using if it exists")
 
     since_base_time = None
-    parser.add_option("--since",
-                      help="only look this far back (freeform)")
+    parser.add_argument("--since",
+                        help="only look this far back (freeform)")
 
 
-    options, args = parser.parse_args(args=argv[1:])
-
-    assert len(args) == 0
+    options = parser.parse_args(args=argv[1:])
 
     if not options.index:
         sys.exit("No kphotoalbum index given (with --index or in kphotoalbumrc)")

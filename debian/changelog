@@ -26,6 +26,7 @@ kpa-grep (0.14) unstable; urgency=medium
     * setup.py, debian/control: switch explicitly from distutils.core to
       setuptools (the backwards compatibility interface was still
       triggering uses-python-distutils.)
+    * kpa_grep.py: upgrade optparse to argparse (closes github #13).
 
  -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
 
