@@ -5,6 +5,7 @@ Maintainer: Mark Eichin <eichin@thok.org>
 Build-Depends:
   debhelper-compat (= 13),
   dh-python,
+  python3-setuptools,
   python3,
 # ronn builds man pages from markdown
   ronn,
