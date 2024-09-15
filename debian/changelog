@@ -27,8 +27,12 @@ kpa-grep (0.14) unstable; urgency=medium
       setuptools (the backwards compatibility interface was still
       triggering uses-python-distutils.)
     * kpa_grep.py: upgrade optparse to argparse (closes github #13).
+    * kpa_grep.py: some lintian cleanups - move all imports to the top,
+      use "with open", upgrade Exception to ValueError when Calendar.parse
+      doesn't work, use more f-strings, improve post-argparse TODO, fix
+      some whitespace.
 
- -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
+  -- Mark W. Eichin <eichin@thok.org>  Sun, 15 Sep 2024 03:05:42 -0400
 
 kpa-grep (0.13) unstable; urgency=medium
 

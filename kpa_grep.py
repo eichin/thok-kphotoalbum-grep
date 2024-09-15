@@ -18,8 +18,10 @@ import os
 import sys
 import argparse
 import xml.etree.ElementTree as etree
+import json
 import datetime
 import dateutil.parser
+from parsedatetime import Calendar
 
 # kimdaba_default_album lifted from thok kimdaba_album.py, by permission [from myself]
 def kimdaba_default_album():
@@ -35,9 +37,10 @@ def kimdaba_default_album():
         # the --help as absent, as well (once we upgrade to argparse, anyway)
         return None
 
-    args = dict(line.rstrip("\n").split("=", 1)
-                for line in open(kphotoalbumrc)
-                if "=" in line)
+    with open(kphotoalbumrc) as config:
+        args = dict(line.rstrip("\n").split("=", 1)
+                    for line in config
+                    if "=" in line)
     if "configfile" not in args:
         # kphotoalbumrc changes format more than index.xml does, but we
         #  should give some hints as to why we get
@@ -51,10 +54,9 @@ def kimdaba_default_album():
 #  based on TERQAS/TimeML, just for completeness.
 def since(reltime):
     """return a lower timestamp for since-this-time"""
-    from parsedatetime import Calendar
     value, success = Calendar().parse(reltime)
     if success == 0:
-        raise Exception("Didn't understand since %s" % reltime)
+        raise ValueError(f"Didn't understand since \"{reltime}\"")
     return datetime.datetime(*value[:6])
 
 def past_since(reltime):
@@ -91,7 +93,7 @@ def main(argv):
     parser.add_argument("--path", action="append", dest="paths", default=[],
                         help='image "file" attribute must contain this string (index path is stripped if present)')
 
-    # TODO: switch to argparse and add an exclusion-group
+    # TODO: use add_mutually_exclusive_group?
     parser.add_argument("--dump-tags", action="store_true",
                         help="dump all known tags")
     parser.add_argument("--index-path", action="store_true",
@@ -108,7 +110,7 @@ def main(argv):
         sys.exit("No kphotoalbum index given (with --index or in kphotoalbumrc)")
 
     if not os.path.exists(options.index):
-        sys.exit("kphotoalbum index {} not found".format(options.index))
+        sys.exit(f"kphotoalbum index {options.index} not found")
 
     if options.index_path:
         print(options.index)
@@ -133,7 +135,6 @@ def main(argv):
             sys.stdout.flush()
 
     if options.json:
-        import json
         def emit_path(img):
             """similar to --xml, write out ad-hoc json"""
             # lxml.objectify didn't really help,
@@ -180,10 +181,9 @@ def main(argv):
                             tags.append(val)
                     print(", ".join(sorted(tags)))
             print()
-        
 
     if not os.path.exists(options.index):
-        raise IOError("Index %s not found" % options.index)
+        raise IOError(f"Index {options.index} not found")
 
     if options.since:
         since_base_time = past_since(options.since)
@@ -227,7 +227,7 @@ def main(argv):
         for category in kpa.findall("Categories/Category"):
             catname = category.get("name")
             for catvalue in category.findall("value"):
-                print(catname, catvalue.get("value"), 
+                print(catname, catvalue.get("value"),
                       end='\0' if options.print0 else '\n')
             sys.stdout.flush()
         sys.exit()
