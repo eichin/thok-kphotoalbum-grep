@@ -28,6 +28,11 @@ Confirm that a nonexistent tag doesn't break.
 
     $ kpa-grep --index /tmp/kpa-empty-idx.xml --tag fred
 
+Test that `--index-path` works at all
+
+    $ kpa-grep --index /tmp/kpa-empty-idx.xml --index-path
+    /tmp/kpa-empty-idx.xml
+
 ### Two images, one keyword applied to one of them.
 
 No filters should give all of the files.
@@ -186,6 +191,11 @@ Test that an actual config works.
     $ kpa-grep
     /tmp/test_img_1.jpg
     /tmp/test_img_2.jpg
+
+Test that `--index-path` shows the configured value.
+
+    $ kpa-grep --index-path
+    /tmp/kpa-idx.xml
 
 Clean up to avoid messing with other tests.
 

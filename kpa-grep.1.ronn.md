@@ -100,7 +100,10 @@ Finally, there are a few options that don't fit in the groups above:
     combining it with `--tag`, `--exclude`, and `--since` (in this
     mode it *doesn't* print a category - see github#15.)
 
-
+  * `--index-path`:
+    Print the pathname of the `index.xml` we're actually using.  (If
+    we have a path but it doesn't exist, fail, but consider changing
+    that if we find a use that would involve creating the expected one.)
 
 ## EXAMPLES
 

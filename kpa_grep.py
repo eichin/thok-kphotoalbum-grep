@@ -94,6 +94,8 @@ def main(argv):
     # TODO: switch to argparse and add an exclusion-group
     parser.add_option("--dump-tags", action="store_true",
                       help="dump all known tags")
+    parser.add_option("--index-path", action="store_true",
+                      help="Display the index path we're using if it exists")
 
     since_base_time = None
     parser.add_option("--since",
@@ -109,6 +111,10 @@ def main(argv):
 
     if not os.path.exists(options.index):
         sys.exit("kphotoalbum index {} not found".format(options.index))
+
+    if options.index_path:
+        print(options.index)
+        sys.exit()
 
     def emit_path(img):
         """given etree for <image>, just print the path"""

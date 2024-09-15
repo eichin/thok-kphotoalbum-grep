@@ -8,7 +8,6 @@ that to `PATH`.
     $ SCRIPTSBUILTDIR=$(realpath ${TESTDIR}/../build/scripts-*)
     $ export PATH=${SCRIPTSBUILTDIR}:$PATH
 
-
 Run it with `--help` which should always work, even without an index.
 
     $ kpa-grep --help 1>/dev/null
@@ -16,6 +15,9 @@ Run it with `--help` which should always work, even without an index.
 Make sure it fails cleanly without an index.
 
     $ kpa-grep --dump-tags
+    No kphotoalbum index given (with --index or in kphotoalbumrc)
+    [1]
+    $ kpa-grep --index-path
     No kphotoalbum index given (with --index or in kphotoalbumrc)
     [1]
 
