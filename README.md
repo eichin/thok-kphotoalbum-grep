@@ -12,3 +12,5 @@ Additional args:
   * `--relative`: paths relative to the index file (ie. don't normalize them)
   * `--index=`_PATH_: explicitly specify the index file
   * `--json`, `--xml`: output whole records (no surrounding document)
+
+See [`kpa-grep(1)`](kpa-grep.1.ronn.md) for specifics.
