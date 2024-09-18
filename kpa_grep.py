@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.14"
+__version__ = "0.15"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -19,7 +19,9 @@ import sys
 import argparse
 import xml.etree.ElementTree as etree
 import json
+import sqlite3
 import datetime
+from pathlib import Path
 import dateutil.parser
 from parsedatetime import Calendar
 
@@ -69,6 +71,117 @@ def past_since(reltime):
         return since("last " + reltime)
     return when
 
+# https://specifications.freedesktop.org/basedir-spec/latest/index.html
+def xdg_cache(project):
+    """find (and create if necessary) an XDG-correct per-project cache dir"""
+    base = os.environ.get("XDG_CACHE_HOME", os.environ["HOME"] + "/.cache")
+    cachedir = Path(base)/project
+    cachedir.mkdir(parents=True, exist_ok=True)
+    return cachedir
+
+# TODO: factor back into --json
+def get_options(img):
+    """extract tags from XML options elements into a simple dict"""
+    image = {}
+    for options in img:
+        assert options.tag == "options", options.tag
+        for option in options:
+            assert option.tag == "option", option.tag
+            # option
+            image[option.get("name")] = []
+            # values
+            for value in option:
+                for attr, val in value.items():
+                    assert attr == "value", attr
+                    image[option.get("name")].append(val)
+    return image
+
+def catnames(image_options):
+    """flatten category/tag hierarchy"""
+    for cat in image_options:
+        for tag in image_options[cat]:
+            yield cat, tag
+
+def pairup(name, rightgen):
+    """flatten name/category/tag into rows for executemany"""
+    for cat, tag in rightgen:
+        yield dict(
+            name=name,
+            cat=cat,
+            tag=tag,
+            )
+
+def cache_with_db(xmlpath, populate_fn):
+    """if we've seen xmlpath before and we have a current cache, just
+    open and return it.  If not, call populate and store that."""
+    # TODO: just pass in the new db instead of the :memory: step?
+    cachepath = xdg_cache("kpa-grep")/"caches.db"
+    cachedb = sqlite3.connect(cachepath)
+    cachecur = cachedb.cursor()
+    cachecur.execute("create table if not exists dbs(upstreamname unique, upstreamdate timestamp, localname)")
+    res = cachecur.execute("select upstreamdate, localname from dbs where upstreamname = :xmlpath",
+                           dict(xmlpath=xmlpath))
+    for upstreamdate, localname in res.fetchall():
+        if Path(xmlpath).stat().st_mtime == float(upstreamdate):
+            cachedb.close()
+            return sqlite3.connect(localname)
+    # not found and out of date are currently identical
+    # consider using a hash here instead!
+    localname = xdg_cache("kpa-grep")/(xmlpath.replace("/", "_") + ".db")
+    realdb = populate_fn(xmlpath)
+    backup = sqlite3.connect(localname)
+    with backup:
+        realdb.backup(backup)
+    backup.close()
+
+    cachecur.execute("insert into dbs values(:xmlpath, :xmldate, :localname)",
+                     dict(xmlpath=str(xmlpath),
+                          xmldate=Path(xmlpath).stat().st_mtime,
+                          localname=str(localname)))
+    cachecur.close()
+    cachedb.commit()
+    cachedb.close()
+    # consider returning the cache for consistency
+    return realdb
+
+def cache_everything(name):
+    """convert to sqlite, referencing original path for cache flushing"""
+    kpa = etree.ElementTree(file=name)
+
+    con = sqlite3.connect(":memory:")
+    cur = con.cursor()
+    cur.execute("create table tags(filename, category, tag)")
+    # <image file="" startDate="" angle="" md5sum="" width="" height="">
+    cur.execute("create table fields(file, label, description, startDate, angle, md5sum, width, height)")
+    for img in kpa.findall("images/image"):
+        imgname = img.get("file")
+        cur.executemany("INSERT INTO tags VALUES(:name, :cat, :tag)",
+                          pairup(imgname, catnames(get_options(img))))
+
+        image = {}
+        for attr, val in sorted(img.items()):
+            if attr in ["width", "angle", "height"]:
+                # because md5sum is *sometimes* int
+                image[attr] = int(val)
+            elif attr in ["startDate"] :
+                image[attr] = dateutil.parser.parse(val).timestamp()
+            else:
+                image[attr] = val
+        if "angle" not in image:
+            image["angle"] = None
+        if "label" not in image:
+            image["label"] = None
+        if "description" not in image:
+            image["description"] = None
+        cur.execute("INSERT INTO fields VALUES(:file, :label, :description, :startDate, :angle, :md5sum, :width, :height)",
+                    image)
+    cur.execute("create index fields_filename on fields(file)")
+    cur.execute("create index tags_filename on tags(filename)")
+    cur.execute("create index tags_tag on tags(tag)")
+    cur.close()
+    con.commit()
+    return con
+
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
@@ -99,7 +212,6 @@ def main(argv):
     parser.add_argument("--index-path", action="store_true",
                         help="Display the index path we're using if it exists")
 
-    since_base_time = None
     parser.add_argument("--since",
                         help="only look this far back (freeform)")
 
@@ -116,9 +228,33 @@ def main(argv):
         print(options.index)
         sys.exit()
 
-    def emit_path(img):
+    def img_from_name(kpadb, name):
+        imgcur = kpadb.cursor()
+        tags = dict()
+        res = imgcur.execute("select category, tag from tags where filename is ?", (name,))
+        for category, tag in sorted(res.fetchall()):
+            tags[category] = tags.get(category, []) + [tag]
+
+        attrs = {}
+        res = imgcur.execute("select * from fields where file is ?", (name,))
+        for file, label, description, startDate, angle, md5sum, width, height, in res:
+            # preserve XML order in assignment order (yay python3)
+            attrs["file"] = file
+            if label is not None:
+                attrs["label"] = label
+            if description is not None:
+                attrs["description"] = description
+            attrs["startDate"] = datetime.datetime.fromtimestamp(startDate).isoformat()
+            attrs["angle"] = angle
+            attrs["md5sum"] = md5sum
+            attrs["width"] = width
+            attrs["height"] = height
+        imgcur.close()
+        return attrs, tags
+
+    def emit_path(attrs, _tags):
         """given etree for <image>, just print the path"""
-        path = img.get("file")
+        path = attrs["file"]
         if not options.relative:
             path = os.path.join(os.path.dirname(options.index), path)
         if options.print0:
@@ -129,138 +265,118 @@ def main(argv):
         sys.stdout.flush()
 
     if options.xml:
-        def emit_path(img):
+        def emit_path(attrs, tags):
             """write all the XML"""
+            img = etree.fromstring("<image/>")
+            for key, value in attrs.items():
+                if value is not None:
+                    img.set(key, str(value))
+
+            options = etree.SubElement(img, "options")
+            for category in tags:
+                option = etree.SubElement(options, "option",
+                                          dict(name=category))
+                for tag in tags[category]:
+                    value = etree.SubElement(option, "value",
+                                             dict(value=tag))
+
+            etree.indent(img, space=' '*4, level=2)
             sys.stdout.write(etree.tostring(img, encoding="unicode"))
             sys.stdout.flush()
 
     if options.json:
-        def emit_path(img):
+        def emit_path(attrs, tags):
             """similar to --xml, write out ad-hoc json"""
-            # lxml.objectify didn't really help,
             image = {}
-            for attr, val in sorted(img.items()):
+            for attr, val in sorted(attrs.items()):
                 if attr in ["width", "angle", "height"]:
                     # because md5sum is *sometimes* int
-                    image[attr] = int(val)
+                    if val is not None:
+                        image[attr] = int(val)
                 else:
                     image[attr] = val
-            for options in img:
-                assert options.tag == "options", options.tag
-                for option in options:
-                    assert option.tag == "option", option.tag
-                    # option
-                    image[option.get("name")] = []
-                    # values
-                    for value in option:
-                        for attr, val in value.items():
-                            assert attr == "value", attr
-                            image[option.get("name")].append(val)
-
+            image.update(tags)
             print(json.dumps(image))
             sys.stdout.flush()
 
     if options.markdown:
-        def emit_path(img):
+        def emit_path(attrs, tags):
             """similar to --xml, write out ad-hoc json"""
-            path = img.get("file")
+            path = attrs["file"]
             basepath = path.split("/")[-1].split(".")[0]
             print(f"## {basepath}")
             print(f'![{basepath}]({path}){{: title="{basepath}"}}')
-            print(f'{img.get("description") or ""}')
-            for options in img:
-                assert options.tag == "options", options.tag
-                for option in options:
-                    assert option.tag == "option", option.tag
-                    print()
-                    print(f"### {option.get('name')}")
-                    tags = []
-                    for value in option:
-                        for attr, val in value.items():
-                            assert attr == "value", attr
-                            tags.append(val)
-                    print(", ".join(sorted(tags)))
+            print(f'{attrs.get("description") or ""}')
+            for category in tags:
+                print()
+                print(f"### {category}")
+                print(", ".join(sorted(tags[category])))
             print()
 
     if not os.path.exists(options.index):
         raise IOError(f"Index {options.index} not found")
 
-    if options.since:
-        since_base_time = past_since(options.since)
+    kpadb = cache_with_db(options.index, cache_everything)
 
-    kpa = etree.ElementTree(file=options.index)
+    def build_conditions(options):
+        conditions = []
+        if options.tags:
+            for tag in options.tags:
+                conditions.append(f'tag is "{tag}"')
+        if options.exclude_tags:
+            for tag in options.exclude_tags:
+                conditions.append(f'tag is not "{tag}"')
+        if options.since:
+            since_base_time = past_since(options.since).timestamp()
+            conditions.append(f'fields.startDate > {since_base_time}')
+        return conditions
+
+    # full join because everything has *fields* but not everything has *tags*
+    kpadb_join = "full join tags on tags.filename == fields.file"
 
     if options.dump_tags:
         if options.xml:
             raise NotImplementedError("--dump-tags --xml")
         if options.json:
             raise NotImplementedError("--dump-tags --json")
-        if options.tags:
-            tags_required = set(options.tags)
-        if options.exclude_tags:
-            tags_forbidden = set(options.exclude_tags)
-        if since_base_time:
-            # don't shortcut via categories, scrape tags from the images
-            collectedtags = set()
-            for img in kpa.findall("images/image"):
-                imgtime = dateutil.parser.parse(img.get("startDate"))
-                if imgtime < since_base_time:
-                    # rejected due to being older than --since
-                    continue
-                imgtags = set([f.get("value") for f in img.findall("options/option/value")])
-                if options.tags:
-                    if tags_required - imgtags:
-                        # rejected due to not satisfying the tags
-                        continue
-                if options.exclude_tags:
-                    if tags_forbidden & imgtags:
-                        # rejected due to having any excluded tags
-                        continue
-                collectedtags.update(imgtags)
-            for tag in sorted(collectedtags):
-                print(tag, end='\0' if options.print0 else '\n')
-            sys.stdout.flush()
-            sys.exit()
 
-        # just use the cache - doesn't make it any faster, we still parse
-        #  the whole file, but it simplifies the code a little
-        for category in kpa.findall("Categories/Category"):
-            catname = category.get("name")
-            for catvalue in category.findall("value"):
-                print(catname, catvalue.get("value"),
-                      end='\0' if options.print0 else '\n')
-            sys.stdout.flush()
+        conditions = build_conditions(options)
+        conditions.append("tag is not NULL")
+        if conditions:
+            where = "WHERE " + (" AND ".join(conditions))
+        else:
+            where = ""
+        res = kpadb.execute(f"select distinct tag from fields {kpadb_join} {where} order by tag")
+        for tag, in sorted(res.fetchall()):
+            print(tag, end='\0' if options.print0 else '\n')
+        sys.stdout.flush()
         sys.exit()
 
-    for img in kpa.findall("images/image"):
-        imgtags = set([f.get("value") for f in img.findall("options/option/value")])
-        if options.tags:
-            tags_required = set(options.tags)
-            if tags_required - imgtags:
-                # rejected due to not satisfying the tags
-                continue
-        if options.exclude_tags:
-            tags_forbidden = set(options.exclude_tags)
-            if tags_forbidden & imgtags:
-                # rejected due to having any excluded tags
-                continue
+    # search all images
+    conditions = build_conditions(options)
+    if conditions:
+        where = "WHERE " + (" AND ".join(conditions))
+    else:
+        where = ""
+    #print(f"select distinct file from fields {kpadb_join} {where}")
+    res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}")
+
+    for imgfile, in sorted(res.fetchall()):
+        # pathfilter within? no, turn this into sql
         if options.paths:
             indexdir = os.path.dirname(options.index)
             for path in options.paths:
-                if path in img.get("file"):
+                if path in imgfile:
                     break
                 if path.startswith(indexdir):
-                    if path.replace(indexdir, "").lstrip("/") in img.get("file"):
+                    if path.replace(indexdir, "").lstrip("/") in imgfile:
                         break
             else:
                 # no matches, reject
                 continue
-        if since_base_time:
-            imgtime = dateutil.parser.parse(img.get("startDate"))
-            if imgtime < since_base_time:
-                # rejected due to being older than --since
-                continue
-        emit_path(img)
+        emit_path(*img_from_name(kpadb, imgfile))
+
+    # database is readonly, don't need to commit anything
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

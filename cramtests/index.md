@@ -44,12 +44,12 @@ No filters should give all of the files.
 Dump tags should work.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags
-    Keywords test
+    test
 
 Dump tags supports `--print0`.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --print0 | cat --show-all
-    Keywords test^@ (no-eol)
+    test^@ (no-eol)
 
 Dump tags supports `--since` and `--print0` together (turns out to be
 separate code paths.)  See also
@@ -76,7 +76,7 @@ Known tag path gets printed.
 Known tag generates expected json output.
 
     $ kpa-grep --index /tmp/kpa-idx.xml --tag test --json
-    {"file": "test_img_1.jpg", "label": "", "startDate": "1980-01-01T00:00:10", "Keywords": ["test"]}
+    {"file": "test_img_1.jpg", "height": 0, "label": "", "md5sum": "", "startDate": "1980-01-01T00:00:10", "width": 0, "Keywords": ["test"]}
 
 Get a second opinion on the validity of the json output.
 
@@ -87,15 +87,21 @@ xml whitespace should probably be better, not just for the test, see
 <https://github.com/eichin/thok-kphotoalbum-grep/issues/3> about
 making it more completely valid/useful.
 
+(Note that for some reason, the original "call `etree.tostring` on the
+actual `Element` from the index file strips a character's worth of
+whitespace, so `<options>` is indented by 11 instead of 3*4.  The use
+of `etree.indent` produces indentation that actually matches the
+KPhotoAlbum-written `index.xml`, so I'm going to call that an
+accidental fix of an unnoticed bug in the `--xml` output.)
+
     $ kpa-grep --index /tmp/kpa-idx.xml --tag test --xml
-    <image file="test_img_1.jpg" label="" startDate="1980-01-01T00:00:10">
-               <options>
-                   <option name="Keywords">
-                       <value value="test" />
-                   </option>
-               </options>
-           </image>
-            (no-eol)
+    <image file="test_img_1.jpg" label="" startDate="1980-01-01T00:00:10" md5sum="" width="0" height="0">
+                <options>
+                    <option name="Keywords">
+                        <value value="test" />
+                    </option>
+                </options>
+            </image> (no-eol)
 
 Do a basic check of the XML output with an independent parser
 (`xmllint` uses the GNOME `libxml2`, rather than the `expat` library

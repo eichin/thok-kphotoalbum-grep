@@ -1,3 +1,12 @@
+kpa-grep (0.15) unstable; urgency=medium
+
+  * Support for a sqlite-based cache. (Closes github #10.)
+    Automatic, just slow the first time; needs tuning on invocation and
+    use, the use-time performance isn't nearly as good as I'd hoped
+    ("only" about 5x faster than just parsing.)
+
+ -- Mark W. Eichin <eichin@thok.org>  Mon, 16 Sep 2024 05:41:22 -0400
+
 kpa-grep (0.14) unstable; urgency=medium
 
   * Partial lintian fixes (started using debspawn build --lintian):
