@@ -276,28 +276,32 @@ def main(argv):
                         help="paths relative to the index file (ie. don't normalize them)")
     parser.add_argument("--index", metavar="PATH", default=kimdaba_default_album(),
                         help="explicitly specify the index file PATH")
-    parser.add_argument("--json", action="store_true",
-                        help="output whole records as individual JSON objects")
-    parser.add_argument("--xml", action="store_true",
-                        help="output whole records as KPhotoAlbum XML (no surrounding document)")
-    parser.add_argument("--markdown", action="store_true",
-                        help="output whole records as ad-hoc Markdown")
+
+    formatters = parser.add_mutually_exclusive_group()
+
+    formatters.add_argument("--json", action="store_true",
+                            help="output whole records as individual JSON objects")
+    formatters.add_argument("--xml", action="store_true",
+                            help="output whole records as KPhotoAlbum XML (no surrounding document)")
+    formatters.add_argument("--markdown", action="store_true",
+                            help="output whole records as ad-hoc Markdown")
+    # we *could* add json/xml for these and put them in a separate group,
+    #  but for now this eliminates some special cases.
+    formatters.add_argument("--dump-tags", action="store_true",
+                            help="dump all known tags")
+    formatters.add_argument("--index-path", action="store_true",
+                            help="Display the index path we're using if it exists")
 
     parser.add_argument("--tag", action="append", dest="tags", default=[],
                         help="must match this tag")
     parser.add_argument("--exclude", action="append", dest="exclude_tags", default=[],
                         help="must *not* match this tag")
+    parser.add_argument("--since",
+                        help="only look this far back (freeform)")
     parser.add_argument("--path", action="append", dest="paths", default=[],
                         help='image "file" attribute must contain this string (index path is stripped if present)')
 
-    # TODO: use add_mutually_exclusive_group?
-    parser.add_argument("--dump-tags", action="store_true",
-                        help="dump all known tags")
-    parser.add_argument("--index-path", action="store_true",
-                        help="Display the index path we're using if it exists")
 
-    parser.add_argument("--since",
-                        help="only look this far back (freeform)")
 
 
     options = parser.parse_args(args=argv[1:])
@@ -309,12 +313,15 @@ def main(argv):
         sys.exit(f"kphotoalbum index {options.index} not found")
 
     if options.index_path:
+        # cut out early, we don't need to open the file, just print the name
         print(options.index)
         sys.exit()
 
     if not os.path.exists(options.index):
         raise IOError(f"Index {options.index} not found")
 
+    # get a connection - either to the in-memory version or
+    #  the one from the on-disk cache.
     kpadb = cache_with_db(options.index, cache_everything)
 
     emit_path = lambda name: emit_path_plain(name, options.index, options.relative, options.print0)
@@ -328,6 +335,7 @@ def main(argv):
 
     def build_conditions(options):
         conditions = []
+        # TODO: substitutions here too
         if options.tags:
             for tag in options.tags:
                 conditions.append(f'tag is "{tag}"')
@@ -343,11 +351,6 @@ def main(argv):
     kpadb_join = "full join tags on tags.filename == fields.file"
 
     if options.dump_tags:
-        if options.xml:
-            raise NotImplementedError("--dump-tags --xml")
-        if options.json:
-            raise NotImplementedError("--dump-tags --json")
-
         conditions = build_conditions(options)
         conditions.append("tag is not NULL")
         if conditions:
@@ -362,26 +365,28 @@ def main(argv):
 
     # search all images
     conditions = build_conditions(options)
+    substitutions = []
+    # filter on the supplied paths
+    if options.paths:
+        indexdir = os.path.dirname(options.index)
+        expanded_paths = [checkpath
+                          for checkpath in
+                          options.paths +
+                          [p.replace(indexdir, "").lstrip("/") for p in options.paths]
+                          ]
+        substitutions.extend(expanded_paths)
+        allpaths = ['file == ?'] * len(expanded_paths)
+        pathcond = " OR ".join(allpaths)
+        conditions.append("( " + pathcond + ")")
+
     if conditions:
         where = "WHERE " + (" AND ".join(conditions))
     else:
         where = ""
-    #print(f"select distinct file from fields {kpadb_join} {where}")
-    res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}")
+    # print(f"select distinct file from fields {kpadb_join} {where}")
+    res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}", substitutions)
 
     for imgfile, in sorted(res.fetchall()):
-        # pathfilter within? no, turn this into sql
-        if options.paths:
-            indexdir = os.path.dirname(options.index)
-            for path in options.paths:
-                if path in imgfile:
-                    break
-                if path.startswith(indexdir):
-                    if path.replace(indexdir, "").lstrip("/") in imgfile:
-                        break
-            else:
-                # no matches, reject
-                continue
         emit_path(imgfile)
 
     # database is readonly, don't need to commit anything
