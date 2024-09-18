@@ -18,6 +18,10 @@ Build-Depends:
   libxml2-utils,
 ## xq for more --xml testing (and examples)
   xq,
+## the builder environment is minimal enough that /bin/time isn't
+## included, but pybuild doesn't use bash, so we need this to get
+## test run timings
+  time,
 # duplicates of install-deps so we can run also tests at build time
   python3-dateutil,
   python3-parsedatetime,
