@@ -182,6 +182,90 @@ def cache_everything(name):
     con.commit()
     return con
 
+def img_from_name(kpadb, name):
+    imgcur = kpadb.cursor()
+    tags = dict()
+    res = imgcur.execute("select category, tag from tags where filename is ?", (name,))
+    for category, tag in sorted(res.fetchall()):
+        tags[category] = tags.get(category, []) + [tag]
+
+    attrs = {}
+    res = imgcur.execute("select * from fields where file is ?", (name,))
+    for file, label, description, startDate, angle, md5sum, width, height, in res:
+        # preserve XML order in assignment order (yay python3)
+        attrs["file"] = file
+        if label is not None:
+            attrs["label"] = label
+        if description is not None:
+            attrs["description"] = description
+        attrs["startDate"] = datetime.datetime.fromtimestamp(startDate).isoformat()
+        attrs["angle"] = angle
+        attrs["md5sum"] = md5sum
+        attrs["width"] = width
+        attrs["height"] = height
+    imgcur.close()
+    return attrs, tags
+
+def emit_path_plain(path, index, relative, print0):
+    """given etree for <image>, just print the path"""
+    if not relative:
+        path = os.path.join(os.path.dirname(index), path)
+    if print0:
+        path = path + "\0"
+    else:
+        path = path + "\n"
+    sys.stdout.write(path)
+    sys.stdout.flush()
+
+def emit_path_xml(path, kpadb):
+    """write all the XML"""
+    attrs, tags = img_from_name(kpadb, path)
+    img = etree.fromstring("<image/>")
+    for key, value in attrs.items():
+        if value is not None:
+            img.set(key, str(value))
+
+    options = etree.SubElement(img, "options")
+    for category in tags:
+        option = etree.SubElement(options, "option",
+                                  dict(name=category))
+        for tag in tags[category]:
+            value = etree.SubElement(option, "value",
+                                     dict(value=tag))
+
+    etree.indent(img, space=' '*4, level=2)
+    sys.stdout.write(etree.tostring(img, encoding="unicode"))
+    sys.stdout.flush()
+
+def emit_path_json(path, kpadb):
+    """similar to --xml, write out ad-hoc json"""
+    attrs, tags = img_from_name(kpadb, path)
+    image = {}
+    for attr, val in sorted(attrs.items()):
+        if attr in ["width", "angle", "height"]:
+            # because md5sum is *sometimes* int
+            if val is not None:
+                image[attr] = int(val)
+        else:
+            image[attr] = val
+    image.update(tags)
+    print(json.dumps(image))
+    sys.stdout.flush()
+
+def emit_path_markdown(path, kpadb):
+    """similar to --xml, write out ad-hoc markdown"""
+    attrs, tags = img_from_name(kpadb, path)
+    path = attrs["file"]
+    basepath = path.split("/")[-1].split(".")[0]
+    print(f"## {basepath}")
+    print(f'![{basepath}]({path}){{: title="{basepath}"}}')
+    print(f'{attrs.get("description") or ""}')
+    for category in tags:
+        print()
+        print(f"### {category}")
+        print(", ".join(sorted(tags[category])))
+    print()
+
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
@@ -228,95 +312,19 @@ def main(argv):
         print(options.index)
         sys.exit()
 
-    def img_from_name(kpadb, name):
-        imgcur = kpadb.cursor()
-        tags = dict()
-        res = imgcur.execute("select category, tag from tags where filename is ?", (name,))
-        for category, tag in sorted(res.fetchall()):
-            tags[category] = tags.get(category, []) + [tag]
-
-        attrs = {}
-        res = imgcur.execute("select * from fields where file is ?", (name,))
-        for file, label, description, startDate, angle, md5sum, width, height, in res:
-            # preserve XML order in assignment order (yay python3)
-            attrs["file"] = file
-            if label is not None:
-                attrs["label"] = label
-            if description is not None:
-                attrs["description"] = description
-            attrs["startDate"] = datetime.datetime.fromtimestamp(startDate).isoformat()
-            attrs["angle"] = angle
-            attrs["md5sum"] = md5sum
-            attrs["width"] = width
-            attrs["height"] = height
-        imgcur.close()
-        return attrs, tags
-
-    def emit_path(attrs, _tags):
-        """given etree for <image>, just print the path"""
-        path = attrs["file"]
-        if not options.relative:
-            path = os.path.join(os.path.dirname(options.index), path)
-        if options.print0:
-            path = path + "\0"
-        else:
-            path = path + "\n"
-        sys.stdout.write(path)
-        sys.stdout.flush()
-
-    if options.xml:
-        def emit_path(attrs, tags):
-            """write all the XML"""
-            img = etree.fromstring("<image/>")
-            for key, value in attrs.items():
-                if value is not None:
-                    img.set(key, str(value))
-
-            options = etree.SubElement(img, "options")
-            for category in tags:
-                option = etree.SubElement(options, "option",
-                                          dict(name=category))
-                for tag in tags[category]:
-                    value = etree.SubElement(option, "value",
-                                             dict(value=tag))
-
-            etree.indent(img, space=' '*4, level=2)
-            sys.stdout.write(etree.tostring(img, encoding="unicode"))
-            sys.stdout.flush()
-
-    if options.json:
-        def emit_path(attrs, tags):
-            """similar to --xml, write out ad-hoc json"""
-            image = {}
-            for attr, val in sorted(attrs.items()):
-                if attr in ["width", "angle", "height"]:
-                    # because md5sum is *sometimes* int
-                    if val is not None:
-                        image[attr] = int(val)
-                else:
-                    image[attr] = val
-            image.update(tags)
-            print(json.dumps(image))
-            sys.stdout.flush()
-
-    if options.markdown:
-        def emit_path(attrs, tags):
-            """similar to --xml, write out ad-hoc json"""
-            path = attrs["file"]
-            basepath = path.split("/")[-1].split(".")[0]
-            print(f"## {basepath}")
-            print(f'![{basepath}]({path}){{: title="{basepath}"}}')
-            print(f'{attrs.get("description") or ""}')
-            for category in tags:
-                print()
-                print(f"### {category}")
-                print(", ".join(sorted(tags[category])))
-            print()
-
     if not os.path.exists(options.index):
         raise IOError(f"Index {options.index} not found")
 
     kpadb = cache_with_db(options.index, cache_everything)
+
+    emit_path = lambda name: emit_path_plain(name, options.index, options.relative, options.print0)
+
+    if options.xml:
+        emit_path = lambda name: emit_path_xml(name, kpadb)
+    if options.json:
+        emit_path = lambda name: emit_path_json(name, kpadb)
+    if options.markdown:
+        emit_path = lambda name: emit_path_markdown(name, kpadb)
 
     def build_conditions(options):
         conditions = []
@@ -374,7 +382,7 @@ def main(argv):
             else:
                 # no matches, reject
                 continue
-        emit_path(*img_from_name(kpadb, imgfile))
+        emit_path(imgfile)
 
     # database is readonly, don't need to commit anything
 
