@@ -95,10 +95,9 @@ path:
 Finally, there are a few options that don't fit in the groups above:
 
   * `--dump-tags`:
-    Dump out all known tags, one per line.  The output includes the
-    category name.  You can also extract a subset of the names by
-    combining it with `--tag`, `--exclude`, and `--since` (in this
-    mode it *doesn't* print a category - see github#15.)
+    Dump out all known tags, one per line.  You can also extract a
+    subset of the names by combining it with `--tag`, `--exclude`, and
+    `--since`.
 
   * `--index-path`:
     Print the pathname of the `index.xml` we're actually using.  (If
@@ -108,6 +107,14 @@ Finally, there are a few options that don't fit in the groups above:
 ## EXAMPLES
 
 `kpa-grep --tag office --since "last month" | tar cf office-pics.tar --files-from=-`
+
+## ENVIRONMENT
+
+`kpa-grep` obeys `XDG_CACHE_HOME` (and defaults to `$HOME/.cache`.)
+
+`$XDG_CACHE_HOME/kpa-grep` contains a `*.db` for each index it has
+seen, and a `caches.db` to record reference timestamps so they can be
+rebuilt when stale.
 
 ## REFERENCES
 
