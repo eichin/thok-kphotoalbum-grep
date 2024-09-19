@@ -266,6 +266,12 @@ def emit_path_markdown(path, kpadb):
         print(", ".join(sorted(tags[category])))
     print()
 
+def build_where_clause(conditions):
+    """Create a where clause from a list of conditions that may be empty"""
+    if not conditions:
+        return ""
+    return "WHERE " + (" AND ".join(conditions))
+
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
@@ -336,14 +342,13 @@ def main(argv):
     def build_conditions(options):
         conditions = []
         substitutions = []
-        # TODO: substitutions here too
         if options.tags:
             for tag in options.tags:
-                conditions.append(f'tag is ?')
+                conditions.append('tag is ?')
                 substitutions.append(tag)
         if options.exclude_tags:
             for tag in options.exclude_tags:
-                conditions.append(f'tag is not ?')
+                conditions.append('tag is not ?')
                 substitutions.append(tag)
         if options.since:
             since_base_time = past_since(options.since).timestamp()
@@ -356,10 +361,7 @@ def main(argv):
     if options.dump_tags:
         conditions, substitutions = build_conditions(options)
         conditions.append("tag is not NULL")
-        if conditions:
-            where = "WHERE " + (" AND ".join(conditions))
-        else:
-            where = ""
+        where = build_where_clause(conditions)
         res = kpadb.execute(f"select distinct tag from fields {kpadb_join} {where} order by tag", substitutions)
         for tag, in sorted(res.fetchall()):
             print(tag, end='\0' if options.print0 else '\n')
@@ -372,20 +374,15 @@ def main(argv):
     #  (not part of build_conditions because --dump-tags doesn't use it)
     if options.paths:
         indexdir = os.path.dirname(options.index)
-        expanded_paths = [checkpath
-                          for checkpath in
-                          options.paths +
-                          [p.replace(indexdir, "").lstrip("/") for p in options.paths]
-                          ]
+        # each path as-is, then with the index prefix added
+        expanded_paths = options.paths + \
+            [p.replace(indexdir, "").lstrip("/") for p in options.paths]
         substitutions.extend(expanded_paths)
         allpaths = ['file == ?'] * len(expanded_paths)
         pathcond = " OR ".join(allpaths)
         conditions.append("( " + pathcond + ")")
 
-    if conditions:
-        where = "WHERE " + (" AND ".join(conditions))
-    else:
-        where = ""
+    where = build_where_clause(conditions)
     # print(f"select distinct file from fields {kpadb_join} {where}", substitutions)
     res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}", substitutions)
 
