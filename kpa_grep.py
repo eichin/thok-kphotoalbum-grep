@@ -335,38 +335,41 @@ def main(argv):
 
     def build_conditions(options):
         conditions = []
+        substitutions = []
         # TODO: substitutions here too
         if options.tags:
             for tag in options.tags:
-                conditions.append(f'tag is "{tag}"')
+                conditions.append(f'tag is ?')
+                substitutions.append(tag)
         if options.exclude_tags:
             for tag in options.exclude_tags:
-                conditions.append(f'tag is not "{tag}"')
+                conditions.append(f'tag is not ?')
+                substitutions.append(tag)
         if options.since:
             since_base_time = past_since(options.since).timestamp()
             conditions.append(f'fields.startDate > {since_base_time}')
-        return conditions
+        return conditions, substitutions
 
     # full join because everything has *fields* but not everything has *tags*
     kpadb_join = "full join tags on tags.filename == fields.file"
 
     if options.dump_tags:
-        conditions = build_conditions(options)
+        conditions, substitutions = build_conditions(options)
         conditions.append("tag is not NULL")
         if conditions:
             where = "WHERE " + (" AND ".join(conditions))
         else:
             where = ""
-        res = kpadb.execute(f"select distinct tag from fields {kpadb_join} {where} order by tag")
+        res = kpadb.execute(f"select distinct tag from fields {kpadb_join} {where} order by tag", substitutions)
         for tag, in sorted(res.fetchall()):
             print(tag, end='\0' if options.print0 else '\n')
         sys.stdout.flush()
         sys.exit()
 
     # search all images
-    conditions = build_conditions(options)
-    substitutions = []
+    conditions, substitutions = build_conditions(options)
     # filter on the supplied paths
+    #  (not part of build_conditions because --dump-tags doesn't use it)
     if options.paths:
         indexdir = os.path.dirname(options.index)
         expanded_paths = [checkpath
@@ -383,7 +386,7 @@ def main(argv):
         where = "WHERE " + (" AND ".join(conditions))
     else:
         where = ""
-    # print(f"select distinct file from fields {kpadb_join} {where}")
+    # print(f"select distinct file from fields {kpadb_join} {where}", substitutions)
     res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}", substitutions)
 
     for imgfile, in sorted(res.fetchall()):
