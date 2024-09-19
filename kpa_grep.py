@@ -311,7 +311,8 @@ def main(argv):
                         help='image "file" attribute must contain this string (index path is stripped if present)')
 
 
-
+    parser.add_argument("--debug-sql", action="store_true", 
+                        help=argparse.SUPPRESS)
 
     options = parser.parse_args(args=argv[1:])
 
@@ -386,7 +387,9 @@ def main(argv):
         conditions.append("( " + pathcond + ")")
 
     where = build_where_clause(conditions)
-    # print(f"select distinct file from fields {kpadb_join} {where}", substitutions)
+    if options.debug_sql:
+        print(f"select distinct file from fields {kpadb_join} {where}")
+        print("substitutions:", *substitutions)
     res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}", substitutions)
 
     for imgfile, in sorted(res.fetchall()):
