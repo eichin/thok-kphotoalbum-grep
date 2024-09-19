@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='kpa_grep',
-      version='0.15',
+      version='0.16',
       py_modules=['kpa_grep'],
       description='KPhotoAlbum Index Manipulation Tools',
       author='Mark Eichin',

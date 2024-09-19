@@ -12,6 +12,13 @@ Run it with `--help` which should always work, even without an index.
 
     $ kpa-grep --help 1>/dev/null
 
+Display version (extract from the module so we don't have to update
+this test every version, or use a vague `(re)` or `(glob)` match.)
+
+    $ MODULE_VERSION=$(python3 -c 'from kpa_grep import __version__; print(__version__)')
+    $ kpa-grep --version | sed -e "s/${MODULE_VERSION}/MODVERSION/"
+    kpa-grep MODVERSION
+
 Make sure it fails cleanly without an index.
 
     $ kpa-grep --dump-tags

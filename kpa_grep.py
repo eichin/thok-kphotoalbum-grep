@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.15"
+__version__ = "0.16"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -276,6 +276,9 @@ def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--version', action='version',
+                        version=f'%(prog)s {__version__}')
+
     parser.add_argument("--print0", action="store_true",
                         help="NUL instead of newline, for xargs -0")
     parser.add_argument("--relative", action="store_true",
