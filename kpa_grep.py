@@ -54,6 +54,8 @@ def kimdaba_default_album():
 # This is the easiest "fluffy" date parse I've found; parsedatetime was
 #  written for OSAF/Chandler.  Otherwise I'd have looked for something
 #  based on TERQAS/TimeML, just for completeness.
+# TODO: Calendar.parse fails on "1980-01-02T00:00:35" but works
+#   on "1980-01-02 00:00:35" so maybe feed a strict parser first?
 def since(reltime):
     """return a lower timestamp for since-this-time"""
     value, success = Calendar().parse(reltime)
@@ -118,13 +120,14 @@ def cache_with_db(xmlpath, populate_fn):
     cachepath = xdg_cache("kpa-grep")/"caches.db"
     cachedb = sqlite3.connect(cachepath)
     cachecur = cachedb.cursor()
-    cachecur.execute("create table if not exists dbs(upstreamname unique, upstreamdate timestamp, localname)")
+    cachecur.execute("create table if not exists dbs(upstreamname string unique primary key, upstreamdate timestamp, localname)")
     res = cachecur.execute("select upstreamdate, localname from dbs where upstreamname = :xmlpath",
                            dict(xmlpath=xmlpath))
     for upstreamdate, localname in res.fetchall():
         if Path(xmlpath).stat().st_mtime == float(upstreamdate):
-            cachedb.close()
-            return sqlite3.connect(localname)
+            if Path(localname).exists():
+                cachedb.close()
+                return sqlite3.connect(localname)
     # not found and out of date are currently identical
     # consider using a hash here instead!
     localname = xdg_cache("kpa-grep")/(xmlpath.replace("/", "_") + ".db")
@@ -134,7 +137,8 @@ def cache_with_db(xmlpath, populate_fn):
         realdb.backup(backup)
     backup.close()
 
-    cachecur.execute("insert into dbs values(:xmlpath, :xmldate, :localname)",
+    cachecur.execute("insert or replace into dbs "
+                     "values(:xmlpath, :xmldate, :localname)",
                      dict(xmlpath=str(xmlpath),
                           xmldate=Path(xmlpath).stat().st_mtime,
                           localname=str(localname)))
@@ -150,9 +154,10 @@ def cache_everything(name):
 
     con = sqlite3.connect(":memory:")
     cur = con.cursor()
-    cur.execute("create table tags(filename, category, tag)")
+    cur.execute("create table tags(filename text, category, tag, "
+                "foreign key(filename) references fields(file))")
     # <image file="" startDate="" angle="" md5sum="" width="" height="">
-    cur.execute("create table fields(file, label, description, startDate, angle, md5sum, width, height)")
+    cur.execute("create table fields(file text primary key, label, description, startDate, angle, md5sum, width, height)")
     for img in kpa.findall("images/image"):
         imgname = img.get("file")
         cur.executemany("INSERT INTO tags VALUES(:name, :cat, :tag)",
@@ -272,6 +277,65 @@ def build_where_clause(conditions):
         return ""
     return "WHERE " + (" AND ".join(conditions))
 
+def build_sql(tags, excludes, since, paths, ipath, tags_only=False):
+    subs = []
+    group = f"group by file"
+    if tags:
+        group = f"group by file having count(file) = {len(tags)}"
+
+    select_join = "select tag, file from tags " \
+        "full join fields on tags.filename = fields.file"
+
+    where_and = []
+    if tags:
+        # The intersection of "files with tags" starts with the above
+        #  join of tags and fields; we take the subset of rows that
+        #  have a tag in the list.  The desired rows are the ones that
+        #  have *exactly* the same number of rows as the number of tags.
+        taglist = "(" + ",".join(["?" for t in tags]) + ")"
+        subs.extend(tags)
+        where_and.append(f"tag in {taglist}")
+
+    if excludes:
+        # To exclude "files with these tags" we collect the union of
+        #  the set of files that have any of the excluded tags in them
+        #  and then simply filter them out of the files presented.
+        excludelist = "(" + ",".join(["?" for ex in excludes]) + ")"
+        subs.extend(excludes)
+        where_and.append("file not in (select file "\
+                         "from tags join fields on tags.filename = fields.file "\
+                         f"and tags.tag in {excludelist} )")
+
+    if since:
+        # To filter on a base time, we just filter everything down to
+        #   those records which have a new enough startDate
+        since_base_time = past_since(since).timestamp()
+        where_and.append(f'fields.startDate > {since_base_time} ')
+
+    if paths:
+        # TODO: change this to an in()?
+        indexdir = os.path.dirname(ipath)
+        # each path as-is, then with the index prefix added
+        expanded_paths = paths + \
+            [p.replace(indexdir, "").lstrip("/") for p in paths]
+        subs.extend(expanded_paths)
+        allpaths = ['file == ?'] * len(expanded_paths)
+        pathcond = " OR ".join(allpaths)
+        where_and.append("( " + pathcond + ")")
+
+    where = ("where " + " AND ".join(where_and)) if where_and else ""
+    whole = f"{select_join} {where} {group}"
+    if tags_only:
+        select_join = "select distinct tag from tags "
+        whole_just_tags = whole.replace("select tag, file", 
+                                        "select file", 1)
+
+        whole = f"{select_join} where filename in ( {whole_just_tags} )"
+        # TODO: ORDER BY?
+
+    return whole, subs
+    
+
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
 
@@ -343,56 +407,31 @@ def main(argv):
     if options.markdown:
         emit_path = lambda name: emit_path_markdown(name, kpadb)
 
-    def build_conditions(options):
-        conditions = []
-        substitutions = []
-        if options.tags:
-            for tag in options.tags:
-                conditions.append('tag is ?')
-                substitutions.append(tag)
-        if options.exclude_tags:
-            for tag in options.exclude_tags:
-                conditions.append('tag is not ?')
-                substitutions.append(tag)
-        if options.since:
-            since_base_time = past_since(options.since).timestamp()
-            conditions.append(f'fields.startDate > {since_base_time}')
-        return conditions, substitutions
-
     # full join because everything has *fields* but not everything has *tags*
-    kpadb_join = "full join tags on tags.filename == fields.file"
+    kpadb_join = "full join tags on tags.filename = fields.file"
 
     if options.dump_tags:
-        conditions, substitutions = build_conditions(options)
-        conditions.append("tag is not NULL")
-        where = build_where_clause(conditions)
-        res = kpadb.execute(f"select distinct tag from fields {kpadb_join} {where} order by tag", substitutions)
-        for tag, in sorted(res.fetchall()):
+        sql, subs = build_sql(options.tags, options.exclude_tags,
+                              options.since, options.paths, options.index,
+                              tags_only=True)
+        if options.debug_sql:
+            print("sql:", sql)
+            print("subs:", subs)
+        res = kpadb.execute(sql, subs)
+        #for tag, _imgfile, in res.fetchall():
+        for tag, in res.fetchall():
             print(tag, end='\0' if options.print0 else '\n')
         sys.stdout.flush()
         sys.exit()
 
-    # search all images
-    conditions, substitutions = build_conditions(options)
-    # filter on the supplied paths
-    #  (not part of build_conditions because --dump-tags doesn't use it)
-    if options.paths:
-        indexdir = os.path.dirname(options.index)
-        # each path as-is, then with the index prefix added
-        expanded_paths = options.paths + \
-            [p.replace(indexdir, "").lstrip("/") for p in options.paths]
-        substitutions.extend(expanded_paths)
-        allpaths = ['file == ?'] * len(expanded_paths)
-        pathcond = " OR ".join(allpaths)
-        conditions.append("( " + pathcond + ")")
-
-    where = build_where_clause(conditions)
+    sql, subs = build_sql(options.tags, options.exclude_tags,
+                          options.since, options.paths, options.index)
     if options.debug_sql:
-        print(f"select distinct file from fields {kpadb_join} {where}")
-        print("substitutions:", *substitutions)
-    res = kpadb.execute(f"select distinct file from fields {kpadb_join} {where}", substitutions)
+        print("sql:", sql)
+        print("subs:", subs)
+    res = kpadb.execute(sql, subs)
 
-    for imgfile, in sorted(res.fetchall()):
+    for _tag, imgfile, in res.fetchall():
         emit_path(imgfile)
 
     # database is readonly, don't need to commit anything
