@@ -20,19 +20,18 @@ There are a small set of options to filter results:
   * `--tag` <tagname>:
     Require <tagname> to include an image in the results.  While
     KPhotoAlbum groups tags into Categories, `kpa-grep` *currently* only
-    looks at the names of the tags.
+    looks at the names of the tags - it ignores whether the tag is a
+    `Location`, `Keyword`, or `Person` (or whatever you've customized
+    the tags to be.)
     
   * `--exclude` <tagname>:
-    If <tagname> is present on an image, take it out of the result
-    set.
+    If <tagname> is present on an image, take that image out of the
+    result set.
     
   * `--since` <time>:
     In order to get specifically recent results, give a "human" time,
     like `--since "last week"` or `--since "Friday"`.  (See
-    `parsedatetime.Calendar.parse` for specifics.)  Note that this
-    isn't (currently) any faster, since the index is an XML document
-    we still have to parse the entire thing and that's where most of
-    the time is spent.
+    `parsedatetime.Calendar.parse` for specifics.)
 
   * `--path` <filename>:
     In support of scripts that run `kpa-grep` and then pass those
@@ -96,8 +95,12 @@ Finally, there are a few options that don't fit in the groups above:
 
   * `--dump-tags`:
     Dump out all known tags, one per line.  You can also extract a
-    subset of the names by combining it with `--tag`, `--exclude`, and
-    `--since`.
+    subset of the names by combining it with `--tag`, `--exclude`,
+    `--since`, and/or `--path`.  The tag options are a little bit
+    subtle: they're not operating *on* tags, they're still operating
+    on files - so you still filter down to a set of files, but then
+    `--dump-tags` gives you all of the tags *on those files* which can
+    include tags you didn't mention on the command line.
 
   * `--index-path`:
     Print the pathname of the `index.xml` we're actually using.  (If
@@ -114,8 +117,10 @@ Finally, there are a few options that don't fit in the groups above:
 
 `$XDG_CACHE_HOME/kpa-grep` contains a `*.db` for each index it has
 seen, and a `caches.db` to record reference timestamps so they can be
-rebuilt when stale.
+rebuilt when stale.  (The `.db` files happen to be sqlite3(1)
+databases, because of course they are, but the schema is still subject
+to change and not part of the interface.)
 
 ## REFERENCES
 
-find(1), xargs(1), https://jsonlines.org/
+find(1), xargs(1), jq(1), sqlite3(1), https://jsonlines.org/
