@@ -206,3 +206,73 @@ Test that `--index-path` shows the configured value.
 Clean up to avoid messing with other tests.
 
     $ rm ~/.kde/share/config/kphotoalbumrc
+
+## tag combinations
+
+For these tests, `kpa-many-tags.xml` has tests with tags that match
+the filenames; `test_img_a` has a tag of `Keyword a`, `test_img_abc`
+has all three keywords, `a`, `b`, and `c`; and `test_img_none` has no
+tags at all.
+
+### dump-tags subset
+
+Basic output
+
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --dump-tags
+    a
+    b
+    c
+
+Filtering on tags should filter to the *files* with those tags, not
+the tags themselves, giving us a way to display "neighboring" tags;
+for example, what Location tags also have the tag "ice cream".
+
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --dump-tags --tag a
+    a
+    b
+    c
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --dump-tags --tag c
+    a
+    b
+    c
+
+Literal ice cream example (superset of `kpa-many-tags.xml` but
+shouldn't show any of `a`, `b`, or `c` tags.)
+
+    $ kpa-grep --index /tmp/kpa-ice-cream-tags.xml --dump-tags --tag "ice cream"
+    ice cream
+    Tosci's
+
+
+Listing two tags should list the paths that have both present.
+
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --tag a --relative
+    test_img_a.jpg
+    test_img_ab.jpg
+    test_img_abc.jpg
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --tag b --relative
+    test_img_ab.jpg
+    test_img_abc.jpg
+    test_img_b.jpg
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --tag a --tag b --relative
+    test_img_ab.jpg
+    test_img_abc.jpg
+
+Excluding two tags should show everything that doesn't have either of them.
+
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --exclude a --relative
+    test_img_b.jpg
+    test_img_c.jpg
+    test_img_none.jpg
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --exclude b --relative
+    test_img_a.jpg
+    test_img_c.jpg
+    test_img_none.jpg
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --exclude a --exclude b --relative
+    test_img_c.jpg
+    test_img_none.jpg
+
+Excluding all the tags should still leave the untagged document.
+
+    $ kpa-grep --index /tmp/kpa-many-tags.xml --exclude a --exclude b --exclude c --relative
+    test_img_none.jpg
