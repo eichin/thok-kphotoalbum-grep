@@ -3,8 +3,11 @@ kpa-grep (0.16) unstable; urgency=medium
   * Expanded the test suite to cover tagging cases that didn't actually
     work in 0.15.
   * Added --version (Closes github #18.)
-
- -- Mark W. Eichin <eichin@thok.org>  Wed, 18 Sep 2024 21:24:37 -0400
+  * expand build_conditions to build_sql and generalize it further (since
+    it needed subqueries to work correctly in the first place.)  This gets
+    us "kpa-grep --dump-tags --path" for free.
+  
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 22 Sep 2024 01:35:27 -0400
 
 kpa-grep (0.15) unstable; urgency=medium
 
