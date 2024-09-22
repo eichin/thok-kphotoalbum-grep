@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KPhotoAlbum version="10" compressed="0">
+   <Categories>
+     <Category name="Keywords">
+       <value value="a" id="1"/>
+     </Category>
+     <Category name="Keywords">
+       <value value="b" id="2"/>
+     </Category>
+     <Category name="Keywords">
+       <value value="c" id="3"/>
+     </Category>
+   </Categories>
+   <images>
+       <image file="test_img_none.jpg" label="" startDate="1980-01-01T00:00:00" md5sum="" width="0" height="0">
+           <options/>
+       </image>
+       <image file="test_img_a.jpg" label="" startDate="1980-01-01T00:00:10" md5sum="" width="0" height="0">
+           <options>
+               <option name="Keywords">
+                   <value value="a"/>
+               </option>
+           </options>
+       </image>
+       <image file="test_img_b.jpg" label="" startDate="1980-01-02T00:00:20" md5sum="" width="0" height="0">
+           <options>
+               <option name="Keywords">
+                   <value value="b"/>
+               </option>
+           </options>
+       </image>
+       <image file="test_img_ab.jpg" label="" startDate="1980-01-02T00:00:30" md5sum="" width="0" height="0">
+           <options>
+               <option name="Keywords">
+                   <value value="a"/>
+                   <value value="b"/>
+               </option>
+           </options>
+       </image>
+       <image file="test_img_abc.jpg" label="" startDate="1980-01-02T00:00:40" md5sum="" width="0" height="0">
+           <options>
+               <option name="Keywords">
+                   <value value="a"/>
+                   <value value="b"/>
+                   <value value="c"/>
+               </option>
+           </options>
+       </image>
+       <image file="test_img_c.jpg" label="" startDate="1980-01-02T00:00:50" md5sum="" width="0" height="0">
+           <options>
+               <option name="Keywords">
+                   <value value="c"/>
+               </option>
+           </options>
+       </image>
+   </images>
+</KPhotoAlbum>
