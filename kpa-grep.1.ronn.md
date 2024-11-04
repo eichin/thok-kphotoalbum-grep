@@ -61,6 +61,13 @@ down a unix pipeline.  Options to modify that output include:
     KPhotoAlbum even has an index file, so the absolute paths are
     usually more useful.)
     
+  * `--show-category`:
+    Tags are normally displayed without their category for more
+    readable output (as most tags have guessable categories, and
+    collisions in practice are rare.) This flag displays the category
+    name first, followed by the tag name (separated with a `:`.)
+    Currently only meaningful with `--dump-tags`.
+
 While just getting paths out covers many use cases, over time I've
 wanted to extract more of the data for further processing.  These
 options generate output that includes all of the per-image metadata -

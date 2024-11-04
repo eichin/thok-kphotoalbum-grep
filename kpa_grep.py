@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.16"
+__version__ = "0.17"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -326,7 +326,8 @@ def build_sql(tags, excludes, since, paths, ipath, tags_only=False):
     where = ("where " + " AND ".join(where_and)) if where_and else ""
     whole = f"{select_join} {where} {group}"
     if tags_only:
-        select_join = "select distinct tag from tags "
+        # always return the category too - let the caller discard it
+        select_join = "select distinct tag, category from tags "
         whole_just_tags = whole.replace("select tag, file", 
                                         "select file", 1)
 
@@ -347,6 +348,8 @@ def main(argv):
                         help="NUL instead of newline, for xargs -0")
     parser.add_argument("--relative", action="store_true",
                         help="paths relative to the index file (ie. don't normalize them)")
+    parser.add_argument("--show-category", action="store_true",
+                        help="Include the category when displaying tags")
     parser.add_argument("--index", metavar="PATH", default=kimdaba_default_album(),
                         help="explicitly specify the index file PATH")
 
@@ -419,8 +422,9 @@ def main(argv):
             print("subs:", subs)
         res = kpadb.execute(sql, subs)
         #for tag, _imgfile, in res.fetchall():
-        for tag, in res.fetchall():
-            print(tag, end='\0' if options.print0 else '\n')
+        for tag, cat in res.fetchall():
+            print(f"{cat}:{tag}" if options.show_category else tag, 
+                  end='\0' if options.print0 else '\n')
         sys.stdout.flush()
         sys.exit()
 

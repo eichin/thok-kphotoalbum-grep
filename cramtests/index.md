@@ -276,3 +276,27 @@ Excluding all the tags should still leave the untagged document.
 
     $ kpa-grep --index /tmp/kpa-many-tags.xml --exclude a --exclude b --exclude c --relative
     test_img_none.jpg
+
+# tag labelling
+
+The first half of
+<https://github.com/eichin/thok-kphotoalbum-grep/issues/15> is simply
+displaying the `Category.name` along with the tag value.  For now this
+only applies to `--dump-tags`.  Syntax will just be `category:tag`
+(it's ok that existing tags contain `:` characters - I've been using
+them for exactly this kind of namespacing - since the first one will
+*always* be the category, no defaults, so there's no need for
+disambiguation.
+
+The minimal test index has one tag:
+
+    $ kpa-grep --index /tmp/kpa-idx.xml --dump-tags --show-category
+    Keywords:test
+
+The "why do we even need this" practical case from the ice cream tags
+index:
+
+    $ kpa-grep --index /tmp/kpa-ice-cream-tags.xml --dump-tags --tag "ice cream" --show-category
+    Keywords:ice cream
+    Location:Tosci's
+

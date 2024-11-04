@@ -1,3 +1,9 @@
+kpa-grep (0.17) unstable; urgency=medium
+
+  * Added --show-category (partial github #15.)
+
+ -- Mark W. Eichin <eichin@thok.org>  Sun, 03 Nov 2024 23:26:29 -0500
+
 kpa-grep (0.16) unstable; urgency=medium
 
   * Expanded the test suite to cover tagging cases that didn't actually
@@ -6,7 +12,7 @@ kpa-grep (0.16) unstable; urgency=medium
   * expand build_conditions to build_sql and generalize it further (since
     it needed subqueries to work correctly in the first place.)  This gets
     us "kpa-grep --dump-tags --path" for free.
-  
+
  -- Mark W. Eichin <eichin@thok.org>  Sun, 22 Sep 2024 01:35:27 -0400
 
 kpa-grep (0.15) unstable; urgency=medium
