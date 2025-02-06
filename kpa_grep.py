@@ -410,9 +410,6 @@ def main(argv):
     if options.markdown:
         emit_path = lambda name: emit_path_markdown(name, kpadb)
 
-    # full join because everything has *fields* but not everything has *tags*
-    kpadb_join = "full join tags on tags.filename = fields.file"
-
     if options.dump_tags:
         sql, subs = build_sql(options.tags, options.exclude_tags,
                               options.since, options.paths, options.index,
