@@ -300,3 +300,41 @@ index:
     Keywords:ice cream
     Location:Tosci's
 
+# checking hashes
+
+Some testing related to an archive upgrade turned up an image that
+didn't match the md5sum in the `index.xml`.  There's probably a way to
+check for that within `kphotoalbum` itself, but for scripting
+convenience it seemed like something that would fit as a `kpa-grep`
+option.
+
+We'll test this with some sample files:
+
+    $ dd if=/dev/zero of=/tmp/image1k bs=1k count=1 status=none
+    $ dd if=/dev/zero of=/tmp/image100k bs=100k count=1 status=none
+    $ dd if=/dev/zero of=/tmp/image2G bs=1M count=2074 status=none
+
+(The last one is roughly the size of the largest file in my personal
+archive, a 10 minute drone video.)  The different sizes are just to
+test against potential memory problems.
+
+First run it clean:
+
+    $ kpa-grep --index /tmp/kpa-hashes.xml --check-hashes
+
+Then corrupt one image (by truncation) and try again:
+
+    $ truncate --size 999 /tmp/image1k
+    $ kpa-grep --index /tmp/kpa-hashes.xml --check-hashes
+    /tmp/image1k
+    $ kpa-grep --index /tmp/kpa-hashes.xml --check-hashes --relative
+    image1k
+    $ kpa-grep --index /tmp/kpa-hashes.xml --check-hashes --print0 | cat --show-all
+    /tmp/image1k^@ (no-eol)
+
+It is currently intentional that `--check-hashes` just gives a list of
+files but doesn't actually give an error status; revisit that.
+
+Clean up:
+
+    $ rm -f /tmp/image1k /tmp/image100k /tmp/image2G

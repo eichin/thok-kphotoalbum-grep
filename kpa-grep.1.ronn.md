@@ -114,6 +114,13 @@ Finally, there are a few options that don't fit in the groups above:
     we have a path but it doesn't exist, fail, but consider changing
     that if we find a use that would involve creating the expected one.)
 
+  * `--check-hashes`:
+    KPhotoAlbum stores an `image.md5sum` attribute which is useful for
+    deduplicating images on import.  In theory it is also useful for
+    detecting (random, not adversarial) image corruption; this scans
+    the archive and re-checksums the on-disk images, and outputs the
+    path of any mismatch.  (Supports `--relative` and `--print0`.)
+
 ## EXAMPLES
 
 `kpa-grep --tag office --since "last month" | tar cf office-pics.tar --files-from=-`

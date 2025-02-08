@@ -10,7 +10,7 @@ in a tar file; it uses the default kphotoalbum index file, and outputs
 full pathnames so tar can just find them.
 """
 
-__version__ = "0.17"
+__version__ = "0.18"
 __author__  = "Mark Eichin <eichin@thok.org>"
 __license__ = "MIT"
 
@@ -18,6 +18,7 @@ import os
 import sys
 import argparse
 import xml.etree.ElementTree as etree
+import hashlib
 import json
 import sqlite3
 import datetime
@@ -187,6 +188,15 @@ def cache_everything(name):
     con.commit()
     return con
 
+def md5mismatch(indexpath, imgfile, md5sum):
+    # internal names are always relative
+    filepath = os.path.join(os.path.dirname(indexpath), imgfile)
+    # TODO: raise from, to paint filepath into the exception chain?
+    with open(filepath, "rb") as img:
+        imgdigest = hashlib.file_digest(img, hashlib.md5)
+    imgsum = imgdigest.hexdigest()
+    return imgsum != md5sum
+
 def img_from_name(kpadb, name):
     imgcur = kpadb.cursor()
     tags = dict()
@@ -277,13 +287,17 @@ def build_where_clause(conditions):
         return ""
     return "WHERE " + (" AND ".join(conditions))
 
-def build_sql(tags, excludes, since, paths, ipath, tags_only=False):
+def build_sql(tags, excludes, since, paths, ipath, tags_only=False,
+              alt_results=None):
     subs = []
     group = f"group by file"
+    if alt_results is None:
+        alt_results = ["tag", "file"]
+    selected_fields = ", ".join(alt_results)
     if tags:
         group = f"group by file having count(file) = {len(tags)}"
 
-    select_join = "select tag, file from tags " \
+    select_join = f"select {selected_fields} from tags " \
         "full join fields on tags.filename = fields.file"
 
     where_and = []
@@ -367,6 +381,8 @@ def main(argv):
                             help="dump all known tags")
     formatters.add_argument("--index-path", action="store_true",
                             help="Display the index path we're using if it exists")
+    formatters.add_argument("--check-hashes", action="store_true",
+                            help="Print path of all files that don't match the stored md5sum")
 
     parser.add_argument("--tag", action="append", dest="tags", default=[],
                         help="must match this tag")
@@ -409,6 +425,18 @@ def main(argv):
         emit_path = lambda name: emit_path_json(name, kpadb)
     if options.markdown:
         emit_path = lambda name: emit_path_markdown(name, kpadb)
+
+    if options.check_hashes:
+        # this could be a much simpler select, but this keeps the abstraction
+        sql, subs = build_sql([], [], None, [], options.index,
+                              alt_results=["file", "md5sum"])
+        res = kpadb.execute(sql, subs)
+        for imgfile, md5sum in res.fetchall():
+            if md5mismatch(options.index, imgfile, md5sum):
+                emit_path(imgfile)
+
+        sys.stdout.flush()
+        sys.exit()
 
     if options.dump_tags:
         sql, subs = build_sql(options.tags, options.exclude_tags,

@@ -1,3 +1,9 @@
+kpa-grep (0.18) unstable; urgency=medium
+
+  * Added --check-hashes (in support of some personal filesystem shuffling.)
+
+ -- Mark W. Eichin <eichin@thok.org>  Thu, 06 Feb 2025 16:08:41 -0500
+
 kpa-grep (0.17) unstable; urgency=medium
 
   * Added --show-category (partial github #15.)

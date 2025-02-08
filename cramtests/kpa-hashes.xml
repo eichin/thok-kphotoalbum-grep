@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KPhotoAlbum version="10" compressed="0">
+   <Categories>
+     <Category name="Keywords">
+       <value value="test" id="1"/>
+     </Category>
+   </Categories>
+   <images>
+       <image file="image1k" label="" startDate="1980-01-01T00:00:10" width="0" height="0" md5sum="0f343b0931126a20f133d67c2b018a3b">
+           <options>
+               <option name="Keywords">
+                   <value value="test"/>
+               </option>
+           </options>
+       </image>
+       <image file="image100k" label="" startDate="1980-01-02T00:00:10" width="0" height="0" md5sum="4c6426ac7ef186464ecbb0d81cbfcb1e">
+           <options/>
+       </image>
+       <image file="image2G" label="" startDate="1980-01-03T00:00:10" width="0" height="0" md5sum="ea393c0ed6e0b95757d2bb2cbf1be31d">
+           <options/>
+       </image>
+   </images>
+</KPhotoAlbum>
