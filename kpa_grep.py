@@ -26,6 +26,7 @@ from pathlib import Path
 import dateutil.parser
 from parsedatetime import Calendar
 
+
 # kimdaba_default_album lifted from thok kimdaba_album.py, by permission [from myself]
 def kimdaba_default_album():
     """Find the path to the default album kimdaba will start with"""
@@ -52,6 +53,7 @@ def kimdaba_default_album():
         return None
     return args["configfile"]
 
+
 # This is the easiest "fluffy" date parse I've found; parsedatetime was
 #  written for OSAF/Chandler.  Otherwise I'd have looked for something
 #  based on TERQAS/TimeML, just for completeness.
@@ -64,6 +66,7 @@ def since(reltime):
         raise ValueError(f"Didn't understand since \"{reltime}\"")
     return datetime.datetime(*value[:6])
 
+
 def past_since(reltime):
     """If parsedatetime gives back a future time, try harder"""
     when = since(reltime)
@@ -74,6 +77,7 @@ def past_since(reltime):
         return since("last " + reltime)
     return when
 
+
 # https://specifications.freedesktop.org/basedir-spec/latest/index.html
 def xdg_cache(project):
     """find (and create if necessary) an XDG-correct per-project cache dir"""
@@ -81,6 +85,7 @@ def xdg_cache(project):
     cachedir = Path(base)/project
     cachedir.mkdir(parents=True, exist_ok=True)
     return cachedir
+
 
 # TODO: factor back into --json
 def get_options(img):
@@ -99,11 +104,13 @@ def get_options(img):
                     image[option.get("name")].append(val)
     return image
 
+
 def catnames(image_options):
     """flatten category/tag hierarchy"""
     for cat in image_options:
         for tag in image_options[cat]:
             yield cat, tag
+
 
 def pairup(name, rightgen):
     """flatten name/category/tag into rows for executemany"""
@@ -113,6 +120,7 @@ def pairup(name, rightgen):
             cat=cat,
             tag=tag,
             )
+
 
 def cache_with_db(xmlpath, populate_fn):
     """if we've seen xmlpath before and we have a current cache, just
@@ -149,6 +157,7 @@ def cache_with_db(xmlpath, populate_fn):
     # consider returning the cache for consistency
     return realdb
 
+
 def cache_everything(name):
     """convert to sqlite, referencing original path for cache flushing"""
     kpa = etree.ElementTree(file=name)
@@ -169,7 +178,7 @@ def cache_everything(name):
             if attr in ["width", "angle", "height"]:
                 # because md5sum is *sometimes* int
                 image[attr] = int(val)
-            elif attr in ["startDate"] :
+            elif attr in ["startDate"]:
                 image[attr] = dateutil.parser.parse(val).timestamp()
             else:
                 image[attr] = val
@@ -188,6 +197,7 @@ def cache_everything(name):
     con.commit()
     return con
 
+
 def md5mismatch(indexpath, imgfile, md5sum):
     # internal names are always relative
     filepath = os.path.join(os.path.dirname(indexpath), imgfile)
@@ -196,6 +206,7 @@ def md5mismatch(indexpath, imgfile, md5sum):
         imgdigest = hashlib.file_digest(img, hashlib.md5)
     imgsum = imgdigest.hexdigest()
     return imgsum != md5sum
+
 
 def img_from_name(kpadb, name):
     imgcur = kpadb.cursor()
@@ -221,6 +232,7 @@ def img_from_name(kpadb, name):
     imgcur.close()
     return attrs, tags
 
+
 def emit_path_plain(path, index, relative, print0):
     """given etree for <image>, just print the path"""
     if not relative:
@@ -231,6 +243,7 @@ def emit_path_plain(path, index, relative, print0):
         path = path + "\n"
     sys.stdout.write(path)
     sys.stdout.flush()
+
 
 def emit_path_xml(path, kpadb):
     """write all the XML"""
@@ -252,6 +265,7 @@ def emit_path_xml(path, kpadb):
     sys.stdout.write(etree.tostring(img, encoding="unicode"))
     sys.stdout.flush()
 
+
 def emit_path_json(path, kpadb):
     """similar to --xml, write out ad-hoc json"""
     attrs, tags = img_from_name(kpadb, path)
@@ -267,6 +281,7 @@ def emit_path_json(path, kpadb):
     print(json.dumps(image))
     sys.stdout.flush()
 
+
 def emit_path_markdown(path, kpadb):
     """similar to --xml, write out ad-hoc markdown"""
     attrs, tags = img_from_name(kpadb, path)
@@ -281,11 +296,13 @@ def emit_path_markdown(path, kpadb):
         print(", ".join(sorted(tags[category])))
     print()
 
+
 def build_where_clause(conditions):
     """Create a where clause from a list of conditions that may be empty"""
     if not conditions:
         return ""
     return "WHERE " + (" AND ".join(conditions))
+
 
 def build_sql(tags, excludes, since, paths, ipath, tags_only=False,
               alt_results=None):
@@ -349,7 +366,7 @@ def build_sql(tags, excludes, since, paths, ipath, tags_only=False,
         # TODO: ORDER BY?
 
     return whole, subs
-    
+
 
 def main(argv):
     """pull subsets of photos out of KPhotoAlbum"""
@@ -464,6 +481,7 @@ def main(argv):
         emit_path(imgfile)
 
     # database is readonly, don't need to commit anything
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
